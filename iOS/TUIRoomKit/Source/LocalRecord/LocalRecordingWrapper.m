@@ -65,13 +65,16 @@
     [[TRTCCloud sharedInstance] setAudioFrameDelegate:self];
     _videoFrame.delegate = _streamWriter;
     _audioFrame.delegate = _streamWriter;
-    
+    [[LocalVideoManager sharedInstance] binding:_videoFrame];
+    [[LocalAudioManager sharedInstance] binding:_audioFrame];
 }
 
 - (void)unsubscribeDelegateCallback {
     [TRTCCloud sharedInstance].delegate = nil;
     _videoFrame.delegate = nil;
     _audioFrame.delegate = nil;
+    [[LocalVideoManager sharedInstance] unbind];
+    [[LocalAudioManager sharedInstance] unbind];
 }
 
 #pragma mark TRTCVideoRenderDelegate
