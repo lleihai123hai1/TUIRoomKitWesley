@@ -5,11 +5,12 @@
 //  Created by WesleyLei on 2023/5/19.
 //
 
-#import "LocalVideoManager.h"
 #import "LocalRecordHeader.h"
+#import "LocalVideoManager.h"
+#import "LocalProcessVideoFrame.h"
 
 @interface LocalVideoManager()
-
+@property (atomic,weak) LocalProcessVideoFrame* processVideoFrame;
 @end
 
 @implementation LocalVideoManager
@@ -25,6 +26,14 @@
 
 - (void)addTRTCVideoFrame:(TRTCVideoFrame *)frame {
     
+}
+
+- (void)binding:(LocalProcessVideoFrame *)processVideoFrame {
+    self.processVideoFrame = processVideoFrame;
+}
+
+- (void)unbind {
+    self.processVideoFrame = nil;
 }
 
 @end

@@ -9,9 +9,17 @@
 #import "LocalRecordHeader.h"
 #import "LocalVideoManager.h"
 #import "LocalAudioManager.h"
+#import "LocalMp4StreamWriter.h"
+#import "LocalProcessVideoFrame.h"
+#import "LocalProcessAudioFrame.h"
 
 @interface LocalRecordingWrapper()<TRTCVideoRenderDelegate,TRTCAudioFrameDelegate>
-
+{
+    LocalMp4StreamWriter *_streamWriter;
+    LocalProcessVideoFrame *_videoFrame;
+    LocalProcessAudioFrame *_audioFrame;
+    
+}
 @end
 
 @implementation LocalRecordingWrapper
@@ -26,9 +34,20 @@
     return gSharedHandler;
 }
 
+- (instancetype)init {
+    self = [super init];
+    if (self) {
+        _streamWriter = [LocalMp4StreamWriter new];
+        _videoFrame = [LocalProcessVideoFrame new];
+        _audioFrame = [LocalProcessAudioFrame new];
+    }
+    return self;
+}
+
 - (void)startRecording {
     if (!_isRecording) {
         _isRecording = YES;
+        [_streamWriter startRecording];
         [self subscribeDelegateCallback];
     }
 }
@@ -37,16 +56,22 @@
     if (_isRecording) {
         _isRecording = NO;
         [self unsubscribeDelegateCallback];
+        [_streamWriter stopRecording];
     }
 }
 
 - (void)subscribeDelegateCallback {
     [[TRTCCloud sharedInstance] setLocalVideoRenderDelegate:self pixelFormat:TRTCVideoPixelFormat_Texture_2D bufferType:TRTCVideoBufferType_Texture];
     [[TRTCCloud sharedInstance] setAudioFrameDelegate:self];
+    _videoFrame.delegate = _streamWriter;
+    _audioFrame.delegate = _streamWriter;
+    
 }
 
 - (void)unsubscribeDelegateCallback {
     [TRTCCloud sharedInstance].delegate = nil;
+    _videoFrame.delegate = nil;
+    _audioFrame.delegate = nil;
 }
 
 #pragma mark TRTCVideoRenderDelegate
