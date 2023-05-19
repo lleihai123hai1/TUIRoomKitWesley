@@ -191,6 +191,22 @@ class SetUpViewModel {
             self.localMirrorAction(sender: view)
         }
         videoItems.append(localMirrorItem)
+        
+        
+        let localRecordingItem = ListCellItemData()
+        localRecordingItem.titleText = .localRecordingText
+        localRecordingItem.hasSwitch = true
+        localRecordingItem.isSwitchOn = LocalRecordingWrapper.sharedInstance().isRecording
+        localRecordingItem.action = { sender in
+            guard let view = sender as? UISwitch else { return }
+            if view.isOn {
+                LocalRecordingWrapper.sharedInstance().startRecording()
+            } else {
+                LocalRecordingWrapper.sharedInstance().stopRecording()
+            }
+        }
+        videoItems.append(localRecordingItem)
+        
     }
     
     func resolutionAction() {
@@ -347,4 +363,6 @@ private extension String {
     static let playVolumeText = localized("TUIRoom.play.volume")
     static let volumePromptText = localized("TUIRoom.volume.prompt")
     static let audioRecordingText = localized("TUIRoom.audio.recording")
+    static let localRecordingText = localized("TUIRoom.local.recording")
+    
 }

@@ -134,3 +134,4 @@
 "TUIRoom.frame.rate.selected" = "帧率选择完毕";
 "TUIRoom.version.too.low" = "系统版本低于12.0，请升级系统";
 "TUIRoom.input.error.room.num.toast" = "请输入正确房间号";
+"TUIRoom.local.recording" = "本地录制";
