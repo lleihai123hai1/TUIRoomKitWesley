@@ -9,8 +9,12 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface LocalProcessAudioFrame : NSObject
+@protocol LocalProcessAudioFrameDelegate <NSObject>
 
+@end
+
+@interface LocalProcessAudioFrame : NSObject
+@property (nonatomic,weak) id<LocalProcessAudioFrameDelegate> delegate;
 @end
 
 NS_ASSUME_NONNULL_END
