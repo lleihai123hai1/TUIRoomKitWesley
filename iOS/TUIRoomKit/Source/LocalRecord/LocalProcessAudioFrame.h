@@ -10,11 +10,13 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @protocol LocalProcessAudioFrameDelegate <NSObject>
-
+- (void)onCallback;
 @end
 
+@class TRTCAudioFrame;
 @interface LocalProcessAudioFrame : NSObject
 @property (nonatomic,weak) id<LocalProcessAudioFrameDelegate> delegate;
+- (void)processAudioFrame:(TRTCAudioFrame*)frame;
 @end
 
 NS_ASSUME_NONNULL_END
