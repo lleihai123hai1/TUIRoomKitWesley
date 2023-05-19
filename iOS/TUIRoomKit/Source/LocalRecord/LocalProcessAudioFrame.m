@@ -8,5 +8,9 @@
 #import "LocalProcessAudioFrame.h"
 
 @implementation LocalProcessAudioFrame
-
+- (void)processAudioFrame:(TRTCAudioFrame*)frame {
+    if ([self.delegate respondsToSelector:@selector(onCallback)]){
+        [self.delegate onCallback];
+    }
+}
 @end
