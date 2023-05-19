@@ -14,7 +14,7 @@
     #import <TXLiteAVSDK_Professional/TRTCCloud.h>
 #endif
 
-#define YGLOCK(lock) dispatch_semaphore_wait(lock, DISPATCH_TIME_FOREVER);
-#define YGUNLOCK(lock) dispatch_semaphore_signal(lock);
+#define TUILOCK(lock) dispatch_semaphore_wait(lock, DISPATCH_TIME_FOREVER);
+#define YUIUNLOCK(lock) dispatch_semaphore_signal(lock);
 
 #endif /* LocalRecordHeader_h */
