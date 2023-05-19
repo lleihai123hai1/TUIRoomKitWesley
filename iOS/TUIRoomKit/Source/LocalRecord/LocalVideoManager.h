@@ -8,9 +8,10 @@
 #import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
-
+@class TRTCVideoFrame;
 @interface LocalVideoManager : NSObject
-
++ (instancetype)sharedInstance;
+- (void)addTRTCVideoFrame:(TRTCVideoFrame *)frame;
 @end
 
 NS_ASSUME_NONNULL_END
