@@ -10,7 +10,7 @@
 #import "LocalVideoManager.h"
 #import "LocalAudioManager.h"
 
-@interface LocalRecordingWrapper()<TRTCLogDelegate>
+@interface LocalRecordingWrapper()<TRTCVideoRenderDelegate,TRTCAudioFrameDelegate>
 
 @end
 
@@ -41,19 +41,21 @@
 }
 
 - (void)subscribeDelegateCallback {
-    [TRTCCloud sharedInstance].delegate = self;
+    [[TRTCCloud sharedInstance] setLocalVideoRenderDelegate:self pixelFormat:TRTCVideoPixelFormat_Texture_2D bufferType:TRTCVideoBufferType_Texture];
+    [[TRTCCloud sharedInstance] setAudioFrameDelegate:self];
 }
 
 - (void)unsubscribeDelegateCallback {
     [TRTCCloud sharedInstance].delegate = nil;
 }
 
-#pragma mark TRTCLogDelegate
+#pragma mark TRTCVideoRenderDelegate
 
 - (void)onRenderVideoFrame:(TRTCVideoFrame *_Nonnull)frame userId:(NSString *__nullable)userId streamType:(TRTCVideoStreamType)streamType {
     [[LocalVideoManager sharedInstance] addTRTCVideoFrame:frame];
 }
 
+#pragma mark TRTCAudioFrameDelegate
 - (void)onCapturedRawAudioFrame:(TRTCAudioFrame *)frame {
     [[LocalAudioManager sharedInstance] addTRTCAudioFrame:frame];
 }
