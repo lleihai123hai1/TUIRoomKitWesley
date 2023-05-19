@@ -8,9 +8,10 @@
 #import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
-
+@class TRTCAudioFrame;
 @interface LocalAudioManager : NSObject
-
++ (instancetype)sharedInstance;
+- (void)addTRTCAudioFrame:(TRTCAudioFrame *)frame;
 @end
 
 NS_ASSUME_NONNULL_END
