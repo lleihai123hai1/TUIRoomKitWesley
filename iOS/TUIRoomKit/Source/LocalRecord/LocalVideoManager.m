@@ -57,6 +57,7 @@
         while (self.isProcessingFrame) {
             TRTCVideoFrame *frame = [self.videoFrameCache objectAtIndex:0];
             [self.videoFrameCache removeObjectAtIndex:0];
+            [self.processVideoFrame processVideoFrame:frame];
         }
     });
 }
@@ -73,7 +74,6 @@
         _videoFrameCache = [SafeNSMutableArray new];
     }
     return _videoFrameCache;
-    
 }
 
 @end

@@ -8,5 +8,9 @@
 #import "LocalProcessVideoFrame.h"
 
 @implementation LocalProcessVideoFrame
-
+- (void)processVideoFrame:(TRTCVideoFrame*)frame {
+    if ([self.delegate respondsToSelector:@selector(onCallback)]){
+        [self.delegate onCallback];
+    }
+}
 @end
