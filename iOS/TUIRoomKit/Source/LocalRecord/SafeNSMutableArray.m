@@ -26,54 +26,54 @@
 
 - (void)addObject:(id)anObject{
     if(anObject){
-        YGLOCK(self.operationsLock)
+        TUILOCK(self.operationsLock)
         [self.datMuArray addObject:anObject];
-        YGUNLOCK(self.operationsLock)
+        YUIUNLOCK(self.operationsLock)
     }
 }
 - (void)insertObject:(id)anObject atIndex:(NSUInteger)index{
-    YGLOCK(self.operationsLock)
+    TUILOCK(self.operationsLock)
     if(anObject && index < self.datMuArray.count){
         [self.datMuArray insertObject:anObject atIndex:index];
     }
-    YGUNLOCK(self.operationsLock)
+    YUIUNLOCK(self.operationsLock)
     
 }
 - (void)removeLastObject{
-    YGLOCK(self.operationsLock)
+    TUILOCK(self.operationsLock)
     [self.datMuArray removeLastObject];
-    YGUNLOCK(self.operationsLock)
+    YUIUNLOCK(self.operationsLock)
 }
 - (void)removeObjectAtIndex:(NSUInteger)index{
-    YGLOCK(self.operationsLock)
+    TUILOCK(self.operationsLock)
     if(index < self.datMuArray.count){
         [self.datMuArray removeObjectAtIndex:index];
     }
-    YGUNLOCK(self.operationsLock)
+    YUIUNLOCK(self.operationsLock)
 }
 - (void)replaceObjectAtIndex:(NSUInteger)index withObject:(id)anObject{
-    YGLOCK(self.operationsLock)
+    TUILOCK(self.operationsLock)
     if(anObject && index < self.datMuArray.count){
         [self.datMuArray replaceObjectAtIndex:index withObject:anObject];
     }
-    YGUNLOCK(self.operationsLock)
+    YUIUNLOCK(self.operationsLock)
 }
 
 - (id)objectAtIndex:(NSUInteger)index{
     __block id temp;
-    YGLOCK(self.operationsLock)
+    TUILOCK(self.operationsLock)
     if(index < self.datMuArray.count){
         temp = [self.datMuArray objectAtIndex:index];
     }
-    YGUNLOCK(self.operationsLock)
+    YUIUNLOCK(self.operationsLock)
     return temp;
 }
 
 -(NSUInteger)count{
     __block NSUInteger temp;
-    YGLOCK(self.operationsLock)
+    TUILOCK(self.operationsLock)
     temp = self.datMuArray.count;
-    YGUNLOCK(self.operationsLock)
+    YUIUNLOCK(self.operationsLock)
     return temp;
 }
 @end
