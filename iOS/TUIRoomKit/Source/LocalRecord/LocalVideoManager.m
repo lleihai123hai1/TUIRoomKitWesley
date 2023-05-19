@@ -8,9 +8,11 @@
 #import "LocalRecordHeader.h"
 #import "LocalVideoManager.h"
 #import "LocalProcessVideoFrame.h"
+#import "SafeNSMutableArray.h"
 
 @interface LocalVideoManager()
 @property (atomic,weak) LocalProcessVideoFrame* processVideoFrame;
+@property (nonatomic,strong) SafeNSMutableArray* videoFrameCache;
 @end
 
 @implementation LocalVideoManager
@@ -24,8 +26,16 @@
     return gSharedHandler;
 }
 
+- (instancetype)init {
+    self = [super init];
+    if (self) {
+    }
+    return self;
+}
+
+
 - (void)addTRTCVideoFrame:(TRTCVideoFrame *)frame {
-    
+    [self.videoFrameCache addObject:frame];
 }
 
 - (void)binding:(LocalProcessVideoFrame *)processVideoFrame {
@@ -34,6 +44,16 @@
 
 - (void)unbind {
     self.processVideoFrame = nil;
+}
+
+#pragma mark set/get
+
+- (SafeNSMutableArray *)videoFrameCache {
+    if (!_videoFrameCache) {
+        _videoFrameCache = [SafeNSMutableArray new];
+    }
+    return _videoFrameCache;
+    
 }
 
 @end
