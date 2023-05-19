@@ -6,8 +6,11 @@
 //
 
 #import "LocalRecordingWrapper.h"
+#import "LocalRecordHeader.h"
+#import "LocalVideoManager.h"
+#import "LocalAudioManager.h"
 
-@interface LocalRecordingWrapper()
+@interface LocalRecordingWrapper()<TRTCLogDelegate>
 
 @end
 
@@ -24,11 +27,35 @@
 }
 
 - (void)startRecording {
-    _isRecording = YES;
+    if (!_isRecording) {
+        _isRecording = YES;
+        [self subscribeDelegateCallback];
+    }
 }
 
 - (void)stopRecording {
-    _isRecording = NO;
+    if (_isRecording) {
+        _isRecording = NO;
+        [self unsubscribeDelegateCallback];
+    }
+}
+
+- (void)subscribeDelegateCallback {
+    [TRTCCloud sharedInstance].delegate = self;
+}
+
+- (void)unsubscribeDelegateCallback {
+    [TRTCCloud sharedInstance].delegate = nil;
+}
+
+#pragma mark TRTCLogDelegate
+
+- (void)onRenderVideoFrame:(TRTCVideoFrame *_Nonnull)frame userId:(NSString *__nullable)userId streamType:(TRTCVideoStreamType)streamType {
+    [[LocalVideoManager sharedInstance] addTRTCVideoFrame:frame];
+}
+
+- (void)onCapturedRawAudioFrame:(TRTCAudioFrame *)frame {
+    [[LocalAudioManager sharedInstance] addTRTCAudioFrame:frame];
 }
 
 @end
