@@ -134,7 +134,6 @@
 "TUIRoom.frame.rate.selected" = "帧率选择完毕";
 "TUIRoom.version.too.low" = "系统版本低于12.0，请升级系统";
 "TUIRoom.input.error.room.num.toast" = "请输入正确房间号";
-
 "TUIRoom.quick.conference" = "快速会议";
 "TUIRoom.invite.meeting" = "邀请你进入会议";
 "TUIRoom.enter.meeting" = "进入会议";
@@ -155,3 +154,4 @@
 "TUIRoom.device.set" = "快速会议设置";
 "TUIRoom.mic.set" = "入会开启麦克风";
 "TUIRoom.camera.set" = "入会开启摄像头";
+"TUIRoom.local.recording" = "本地录制";
