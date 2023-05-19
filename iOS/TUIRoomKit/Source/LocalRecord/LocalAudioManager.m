@@ -8,9 +8,11 @@
 #import "LocalRecordHeader.h"
 #import "LocalAudioManager.h"
 #import "LocalProcessAudioFrame.h"
+#import "SafeNSMutableArray.h"
 
 @interface LocalAudioManager()
 @property (atomic,weak) LocalProcessAudioFrame* processAudioFrame;
+@property (nonatomic,strong) SafeNSMutableArray* videoFrameCache;
 @end
 
 @implementation LocalAudioManager
@@ -24,7 +26,7 @@
 }
 
 - (void)addTRTCAudioFrame:(TRTCAudioFrame *)frame {
-    
+    [self.videoFrameCache addObject:frame];
 }
 
 - (void)binding:(LocalProcessAudioFrame *)processAudioFrame {
@@ -35,5 +37,14 @@
     self.processAudioFrame = nil;
 }
 
+#pragma mark set/get
+
+- (SafeNSMutableArray *)videoFrameCache {
+    if (!_videoFrameCache) {
+        _videoFrameCache = [SafeNSMutableArray new];
+    }
+    return _videoFrameCache;
+    
+}
 
 @end
