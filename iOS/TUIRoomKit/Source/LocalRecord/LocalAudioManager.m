@@ -13,6 +13,7 @@
 @interface LocalAudioManager()
 @property (atomic,weak) LocalProcessAudioFrame* processAudioFrame;
 @property (nonatomic,strong) SafeNSMutableArray* videoFrameCache;
+@property (atomic, assign) BOOL isProcessingFrame;
 @end
 
 @implementation LocalAudioManager
@@ -31,10 +32,28 @@
 
 - (void)binding:(LocalProcessAudioFrame *)processAudioFrame {
     self.processAudioFrame = processAudioFrame;
+    [self startProcessingFrame];
 }
 
 - (void)unbind {
     self.processAudioFrame = nil;
+    [self stopProcessingFrame];
+}
+
+- (void)startProcessingFrame {
+    NSLog(@"------------ startProcessingFrame audio");
+    self.isProcessingFrame = YES;
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        while (self.isProcessingFrame) {
+            TRTCVideoFrame *frame = [self.videoFrameCache objectAtIndex:0];
+            [self.videoFrameCache removeObjectAtIndex:0];
+        }
+    });
+}
+
+- (void)stopProcessingFrame {
+    self.isProcessingFrame = NO;
+    NSLog(@"------------ stopProcessingFrame audio");
 }
 
 #pragma mark set/get

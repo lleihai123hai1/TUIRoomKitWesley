@@ -10,9 +10,11 @@
 #import "LocalProcessVideoFrame.h"
 #import "SafeNSMutableArray.h"
 
-@interface LocalVideoManager()
+@interface LocalVideoManager(){
+}
 @property (atomic,weak) LocalProcessVideoFrame* processVideoFrame;
 @property (nonatomic,strong) SafeNSMutableArray* videoFrameCache;
+@property (atomic, assign) BOOL isProcessingFrame;
 @end
 
 @implementation LocalVideoManager
@@ -40,10 +42,28 @@
 
 - (void)binding:(LocalProcessVideoFrame *)processVideoFrame {
     self.processVideoFrame = processVideoFrame;
+    [self startProcessingFrame];
 }
 
 - (void)unbind {
     self.processVideoFrame = nil;
+    [self stopProcessingFrame];
+}
+
+- (void)startProcessingFrame {
+    NSLog(@"------------ startProcessingFrame video");
+    self.isProcessingFrame = YES;
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        while (self.isProcessingFrame) {
+            TRTCVideoFrame *frame = [self.videoFrameCache objectAtIndex:0];
+            [self.videoFrameCache removeObjectAtIndex:0];
+        }
+    });
+}
+
+- (void)stopProcessingFrame {
+    self.isProcessingFrame = NO;
+    NSLog(@"------------ stopProcessingFrame video");
 }
 
 #pragma mark set/get
