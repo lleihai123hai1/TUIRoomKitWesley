@@ -63,6 +63,12 @@
 - (void)subscribeDelegateCallback {
     [[TRTCCloud sharedInstance] setLocalVideoRenderDelegate:self pixelFormat:TRTCVideoPixelFormat_I420 bufferType:TRTCVideoBufferType_PixelBuffer];
     [[TRTCCloud sharedInstance] setAudioFrameDelegate:self];
+    TRTCAudioFrameDelegateFormat *format = [[TRTCAudioFrameDelegateFormat alloc]init];
+    format.channels = 1;
+    format.sampleRate = 48000;
+    format.samplesPerCall = (int)(format.sampleRate/100);
+    format.mode = TRTCAudioFrameOperationModeReadOnly;
+    [[TRTCCloud sharedInstance] setCapturedRawAudioFrameDelegateFormat:format];
     _videoFrame.delegate = _streamWriter;
     _audioFrame.delegate = _streamWriter;
     [[LocalVideoManager sharedInstance] binding:_videoFrame];
