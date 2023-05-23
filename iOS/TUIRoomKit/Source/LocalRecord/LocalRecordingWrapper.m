@@ -61,7 +61,7 @@
 }
 
 - (void)subscribeDelegateCallback {
-    [[TRTCCloud sharedInstance] setLocalVideoRenderDelegate:self pixelFormat:TRTCVideoPixelFormat_Texture_2D bufferType:TRTCVideoBufferType_Texture];
+    [[TRTCCloud sharedInstance] setLocalVideoRenderDelegate:self pixelFormat:TRTCVideoPixelFormat_32BGRA bufferType:TRTCVideoBufferType_NSData];
     [[TRTCCloud sharedInstance] setAudioFrameDelegate:self];
     _videoFrame.delegate = _streamWriter;
     _audioFrame.delegate = _streamWriter;
@@ -80,6 +80,9 @@
 #pragma mark TRTCVideoRenderDelegate
 
 - (void)onRenderVideoFrame:(TRTCVideoFrame *_Nonnull)frame userId:(NSString *__nullable)userId streamType:(TRTCVideoStreamType)streamType {
+    if (frame.timestamp <= 0) {
+        frame.timestamp = [TRTCCloud generateCustomPTS];
+    }
     [[LocalVideoManager sharedInstance] addTRTCVideoFrame:frame];
 }
 
