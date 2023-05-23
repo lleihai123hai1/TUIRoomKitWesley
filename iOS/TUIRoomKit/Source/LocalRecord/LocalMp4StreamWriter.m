@@ -71,14 +71,92 @@ static int kVideoTimeScale = 1000;
 }
 
 - (void)startRecording {
+    if (_isRecording) {
+        return;
+    }
     [self resetData];
+    if ([self setUpWriter]) {
+        [_writer startWriting];
+    }
     _isRecording = YES;
 }
 
 - (void)stopRecording {
     _isRecording = NO;
+    [self clearData];
 }
 
+- (void)clearData {
+    if (_audioFormatDescription) {
+        CFRelease(_audioFormatDescription);
+    }
+    if (_videoFormatDescription) {
+        CFRelease(_videoFormatDescription);
+    }
+    _writer = nil;
+    _audioWriterInput = nil;
+    _videoWriterInput = nil;
+}
+
+- (BOOL)setUpWriter {
+    NSError *error = nil;
+    NSURL *fileUrl = [NSURL fileURLWithPath:self.outputFilePath];
+    // 根据文件名扩展类型，确定具体容器格式
+    AVFileType mediaFileType = AVFileTypeMPEG4;
+    _writer = [[AVAssetWriter alloc] initWithURL:fileUrl fileType:mediaFileType error:&error];
+    _writer.shouldOptimizeForNetworkUse = YES;  // 把 moov 放在文件的前面
+    if (_writer == nil) {
+      NSLog(@"Create AVAssetWriter failed, error: %@",error.localizedDescription);
+      return NO;
+    }
+    
+    CGSize size =  [UIScreen mainScreen].bounds.size;
+    NSInteger numPixels = size.width * size.height;
+    //每像素比特
+    CGFloat bitsPerPixel = 12.0;
+    NSInteger bitsPerSecond = numPixels * bitsPerPixel;
+    
+    // 码率和帧率设置
+    NSDictionary *compressionProperties = @{ AVVideoAverageBitRateKey : @(bitsPerSecond),
+                                         AVVideoExpectedSourceFrameRateKey : @(15),
+                                         AVVideoMaxKeyFrameIntervalKey : @(10),
+                                         AVVideoProfileLevelKey : AVVideoProfileLevelH264BaselineAutoLevel };
+    
+    
+    //视频属性
+    NSDictionary *videoSetting = @{ AVVideoCodecKey : AVVideoCodecTypeH264,
+                                    AVVideoWidthKey : @(size.height * 2),
+                                    AVVideoHeightKey : @(size.width * 2),
+                                    AVVideoScalingModeKey : AVVideoScalingModeResizeAspectFill,
+                                    AVVideoCompressionPropertiesKey : compressionProperties };
+
+    NSDictionary *audioSetting = @{ AVEncoderBitRatePerChannelKey : @(28000),
+                                    AVFormatIDKey : @(kAudioFormatMPEG4AAC),
+                                    AVNumberOfChannelsKey : @(1),
+                                    AVSampleRateKey : @(22050) };
+    _audioWriterInput =  [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeAudio outputSettings:audioSetting];
+    _audioWriterInput.expectsMediaDataInRealTime = YES;
+    if ([_writer canAddInput:_audioWriterInput]) {
+      [_writer addInput:_audioWriterInput];
+    } else {
+        NSLog(@"Add audio input failed");
+        return NO;
+    }
+    
+    _videoWriterInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeVideo outputSettings:videoSetting];
+    _videoWriterInput.expectsMediaDataInRealTime = YES;
+    _videoWriterInput.transform = CGAffineTransformMakeRotation(M_PI/2.0);
+    _videoWriterInput.mediaTimeScale = kVideoTimeScale;
+    if ([_writer canAddInput:_videoWriterInput]) {
+        [_writer addInput:_videoWriterInput];
+    } else {
+        NSLog(@"Add video input failed");
+        return NO;
+    }
+    return YES;
+}
+
+#pragma mark get/set
 - (NSString *)outputFilePath {
     if (!_outputFilePath) {
         NSString *path = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).firstObject;
@@ -103,7 +181,7 @@ static int kVideoTimeScale = 1000;
 }
 
 - (void)onCallbackLocalVideoFrame:(LocalVideoFrame *)localVideoFrame {
-    
+    [self writeVideoFrame:localVideoFrame duration:50];
 }
 
 #pragma mark write
