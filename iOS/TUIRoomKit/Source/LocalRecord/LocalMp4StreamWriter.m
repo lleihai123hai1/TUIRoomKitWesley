@@ -195,7 +195,7 @@ static int kVideoTimeScale = 1000;
 
 #pragma mark audio write
 - (BOOL)writeLocalAudioFrame:(LocalAudioFrame *)frame {
-    CMSampleBufferRef audioSample = NULL;
+    CMSampleBufferRef audioSample = [self sampleBufferFromAudioData:frame.audioFrame.data sampleRate:frame.audioFrame.sampleRate];
     return [self writeAudioSampleBuffer:audioSample];
 }
 
@@ -215,6 +215,81 @@ static int kVideoTimeScale = 1000;
       NSLog(@"MP4Writer:appendVideo not appended, status= %ld",(long)_writer.status);
     }
     return appended;
+}
+
+
+// NSData转换为CMSampleBufferRef
+- (CMSampleBufferRef)sampleBufferFromAudioData:(NSData *)audioData sampleRate:(Float64)sampleRate {
+
+    AudioStreamBasicDescription audioFormat;
+    audioFormat.mSampleRate = sampleRate;
+    audioFormat.mFormatID = kAudioFormatLinearPCM;
+    audioFormat.mFormatFlags = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
+    audioFormat.mFramesPerPacket = 1;
+    audioFormat.mChannelsPerFrame = 1;
+    audioFormat.mBytesPerFrame = 2;
+    audioFormat.mBytesPerPacket = 2;
+    audioFormat.mBitsPerChannel = 16;
+    audioFormat.mReserved = 0;
+
+    CMFormatDescriptionRef formatDesc = NULL;
+    OSStatus status = CMAudioFormatDescriptionCreate(kCFAllocatorDefault,
+                                                      &audioFormat,
+                                                      0,
+                                                      NULL,
+                                                      0,
+                                                      NULL,
+                                                      NULL,
+                                                      &formatDesc);
+    if (status != noErr) {
+        NSLog(@"Failed to create audio format description");
+        return nil;
+    }
+
+    CMSampleBufferRef sampleBuffer = NULL;
+    CMBlockBufferRef blockBuffer = NULL;
+    AudioBufferList audioBufferList;
+
+    audioBufferList.mNumberBuffers = 1;
+    audioBufferList.mBuffers[0].mNumberChannels = 1;
+    audioBufferList.mBuffers[0].mDataByteSize = (UInt32)[audioData length];
+    audioBufferList.mBuffers[0].mData = (void *)[audioData bytes];
+
+    status = CMBlockBufferCreateWithMemoryBlock(kCFAllocatorDefault,
+                                                (void *)audioBufferList.mBuffers[0].mData,
+                                                audioBufferList.mBuffers[0].mDataByteSize,
+                                                kCFAllocatorNull,
+                                                NULL,
+                                                0,
+                                                audioBufferList.mBuffers[0].mDataByteSize,
+                                                0,
+                                                &blockBuffer);
+    if (status != noErr) {
+        NSLog(@"Failed to create block buffer");
+        return nil;
+    }
+
+    CMSampleTimingInfo timing = {kCMTimeInvalid, kCMTimeInvalid, kCMTimeInvalid};
+    status = CMSampleBufferCreate(kCFAllocatorDefault,
+                                  blockBuffer,
+                                  true,
+                                  NULL,
+                                  NULL,
+                                  formatDesc,
+                                  (CMItemCount)1,
+                                  (CMItemCount)0,
+                                  &timing,
+                                  1,
+                                  &audioBufferList,
+                                  &sampleBuffer);
+    if (status != noErr) {
+        NSLog(@"Failed to create sample buffer");
+        return nil;
+    }
+
+    CFRelease(blockBuffer);
+    CFRelease(formatDesc);
+    return sampleBuffer;
 }
 
 @end
