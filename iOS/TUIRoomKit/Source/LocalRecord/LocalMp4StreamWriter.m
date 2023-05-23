@@ -75,6 +75,8 @@ static int kVideoTimeScale = 1000;
 - (void)stopRecording {
     _isRecording = NO;
     [self clearData];
+    [_audioWriterInput markAsFinished];
+    [_videoWriterInput markAsFinished];
 }
 
 - (void)clearData {
@@ -180,7 +182,8 @@ static int kVideoTimeScale = 1000;
     if (_videoWriterInput.readyForMoreMediaData && _writer.status == AVAssetWriterStatusWriting) {
         if (videoSample != nil) {
             if (!_startedSession) {
-                CMTime pts = CMSampleBufferGetPresentationTimeStamp(videoSample);
+//                CMTime pts = CMSampleBufferGetPresentationTimeStamp(videoSample);
+                CMTime pts = CMTimeMakeWithSeconds(2.5, 30);
                 [_writer startSessionAtSourceTime:pts];
                 _startedSession = YES;
             }
@@ -220,15 +223,16 @@ static int kVideoTimeScale = 1000;
     if (_audioWriterInput.readyForMoreMediaData && _writer.status == AVAssetWriterStatusWriting) {
         if (audioSample != nil) {
             if (!_startedSession) {
-                CMTime pts = CMSampleBufferGetPresentationTimeStamp(audioSample);
+//                CMTime pts = CMSampleBufferGetPresentationTimeStamp(audioSample);
+                CMTime pts = CMTimeMakeWithSeconds(2.5, 30);
                 [_writer startSessionAtSourceTime:pts];
                 _startedSession = YES;
             }
             appended = [_audioWriterInput appendSampleBuffer:audioSample];
-            NSLog(@"Write video: %@",(appended ? @"yes" : @"no"));
+            NSLog(@"Write audio: %@",(appended ? @"yes" : @"no"));
         }
     } else {
-      NSLog(@"MP4Writer:appendVideo not appended, status= %ld",(long)_writer.status);
+      NSLog(@"MP4Writer:appendAudio not appended, status= %ld",(long)_writer.status);
     }
     return appended;
 }
