@@ -7,10 +7,32 @@
 
 #import "LocalProcessAudioFrame.h"
 
+
+@interface LocalAudioFrame(){
+}
+
+@end
+
+@implementation LocalAudioFrame
+@end
+
+
+@interface LocalProcessAudioFrame() {
+}
+
+@end
+
 @implementation LocalProcessAudioFrame
+
 - (void)processAudioFrame:(TRTCAudioFrame*)frame {
-    if ([self.delegate respondsToSelector:@selector(onCallback)]){
-        [self.delegate onCallback];
+    if ([self.delegate respondsToSelector:@selector(onCallback:)]){
+        [self.delegate onCallback:[self convertToLocalAudioFrame:frame]];
     }
+}
+
+- (LocalAudioFrame *)convertToLocalAudioFrame:(TRTCAudioFrame*)frame {
+    LocalAudioFrame *audioFrame = [LocalAudioFrame new];
+    audioFrame.audioFrame = frame;
+    return audioFrame;
 }
 @end

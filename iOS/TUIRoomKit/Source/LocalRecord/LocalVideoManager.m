@@ -35,7 +35,6 @@
     return self;
 }
 
-
 - (void)addTRTCVideoFrame:(TRTCVideoFrame *)frame {
     [self.videoFrameCache addObject:frame];
 }
@@ -56,8 +55,10 @@
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         while (self.isProcessingFrame) {
             TRTCVideoFrame *frame = [self.videoFrameCache objectAtIndex:0];
-            [self.videoFrameCache removeObjectAtIndex:0];
-            [self.processVideoFrame processVideoFrame:frame];
+            if (frame) {
+                [self.videoFrameCache removeObjectAtIndex:0];
+                [self.processVideoFrame processVideoFrame:frame];
+            }
         }
     });
 }

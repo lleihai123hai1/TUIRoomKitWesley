@@ -80,16 +80,12 @@
 #pragma mark TRTCVideoRenderDelegate
 
 - (void)onRenderVideoFrame:(TRTCVideoFrame *_Nonnull)frame userId:(NSString *__nullable)userId streamType:(TRTCVideoStreamType)streamType {
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        [[LocalVideoManager sharedInstance] addTRTCVideoFrame:frame];
-    });
+    [[LocalVideoManager sharedInstance] addTRTCVideoFrame:frame];
 }
 
 #pragma mark TRTCAudioFrameDelegate
 - (void)onCapturedRawAudioFrame:(TRTCAudioFrame *)frame {
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        [[LocalAudioManager sharedInstance] addTRTCAudioFrame:frame];
-    });
+    [[LocalAudioManager sharedInstance] addTRTCAudioFrame:frame];
 }
 
 @end
