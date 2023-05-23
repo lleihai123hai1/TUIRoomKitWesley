@@ -15,7 +15,7 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @protocol LocalProcessAudioFrameDelegate <NSObject>
-- (void)onCallback:(LocalAudioFrame*)audioFrame;
+- (void)onCallbackLocalAudioFrame:(LocalAudioFrame*)audioFrame;
 @end
 
 @interface LocalProcessAudioFrame : NSObject
