@@ -74,9 +74,6 @@ static int kVideoTimeScale = 1000;
 
 - (void)stopRecording {
     _isRecording = NO;
-    [_audioWriterInput markAsFinished];
-    [_videoWriterInput markAsFinished];
-    [_writer endSessionAtSourceTime:_lastFramePTS];
     [_writer finishWritingWithCompletionHandler:^{
         NSLog(@"finishWritingWithCompletionHandler");
     }];
