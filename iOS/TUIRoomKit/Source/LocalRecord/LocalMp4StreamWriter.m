@@ -48,7 +48,7 @@ static int kVideoTimeScale = 1000;
 
 - (void)resetData{
     if ([[NSFileManager defaultManager] fileExistsAtPath:self.outputFilePath]) {
-      [[NSFileManager defaultManager] removeItemAtPath:self.outputFilePath error:nil];
+        [[NSFileManager defaultManager] removeItemAtPath:self.outputFilePath error:nil];
     }
     _haveWrittenFirstAudioFrame = NO;
     _totalWrittenBytes = 0;
@@ -91,8 +91,8 @@ static int kVideoTimeScale = 1000;
     _writer = [[AVAssetWriter alloc] initWithURL:fileUrl fileType:mediaFileType error:&error];
     _writer.shouldOptimizeForNetworkUse = YES;  // 把 moov 放在文件的前面
     if (_writer == nil) {
-      NSLog(@"Create AVAssetWriter failed, error: %@",error.localizedDescription);
-      return NO;
+        NSLog(@"Create AVAssetWriter failed, error: %@",error.localizedDescription);
+        return NO;
     }
     
     CGSize size =  [UIScreen mainScreen].bounds.size;
@@ -103,9 +103,9 @@ static int kVideoTimeScale = 1000;
     
     // 码率和帧率设置
     NSDictionary *compressionProperties = @{ AVVideoAverageBitRateKey : @(bitsPerSecond),
-                                         AVVideoExpectedSourceFrameRateKey : @(15),
-                                         AVVideoMaxKeyFrameIntervalKey : @(10),
-                                         AVVideoProfileLevelKey : AVVideoProfileLevelH264BaselineAutoLevel };
+                                             AVVideoExpectedSourceFrameRateKey : @(15),
+                                             AVVideoMaxKeyFrameIntervalKey : @(10),
+                                             AVVideoProfileLevelKey : AVVideoProfileLevelH264BaselineAutoLevel };
     
     
     //视频属性
@@ -114,7 +114,7 @@ static int kVideoTimeScale = 1000;
                                     AVVideoHeightKey : @(size.width * 2),
                                     AVVideoScalingModeKey : AVVideoScalingModeResizeAspectFill,
                                     AVVideoCompressionPropertiesKey : compressionProperties };
-
+    
     NSDictionary *audioSetting = @{ AVEncoderBitRatePerChannelKey : @(28000),
                                     AVFormatIDKey : @(kAudioFormatMPEG4AAC),
                                     AVNumberOfChannelsKey : @(1),
@@ -122,7 +122,7 @@ static int kVideoTimeScale = 1000;
     _audioWriterInput =  [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeAudio outputSettings:audioSetting];
     _audioWriterInput.expectsMediaDataInRealTime = YES;
     if ([_writer canAddInput:_audioWriterInput]) {
-      [_writer addInput:_audioWriterInput];
+        [_writer addInput:_audioWriterInput];
     } else {
         NSLog(@"Add audio input failed");
         return NO;
@@ -166,12 +166,12 @@ static int kVideoTimeScale = 1000;
 }
 
 - (void)onCallbackLocalVideoFrame:(LocalVideoFrame *)localVideoFrame {
-    [self writeVideoFrame:localVideoFrame];
+    [self writeLocalVideoFrame:localVideoFrame];
 }
 
 #pragma mark video write
-- (BOOL)writeVideoFrame:(LocalVideoFrame *)frame {
-    CMSampleBufferRef videoSample = NULL;
+- (BOOL)writeLocalVideoFrame:(LocalVideoFrame *)frame {
+    CMSampleBufferRef videoSample = [self sampleBufferFromVideoData:frame.videoFrame.pixelBuffer];
     return [self writeVideoSampleBuffer:videoSample];
 }
 
@@ -188,9 +188,25 @@ static int kVideoTimeScale = 1000;
             NSLog(@"Write video: %@",(appended ? @"yes" : @"no"));
         }
     } else {
-      NSLog(@"MP4Writer:appendVideo not appended, status= %ld",(long)_writer.status);
+        NSLog(@"MP4Writer:appendVideo not appended, status= %ld",(long)_writer.status);
     }
     return appended;
+}
+
+- (CMSampleBufferRef)sampleBufferFromVideoData:(CVPixelBufferRef)pixelBuffer {
+    CMSampleBufferRef sampleBuffer = NULL;
+    CMFormatDescriptionRef formatDescription = NULL;
+    CMSampleTimingInfo timing = { kCMTimeInvalid, kCMTimeInvalid, kCMTimeInvalid };
+
+    // Get the format description from the pixel buffer
+    CMVideoFormatDescriptionCreateForImageBuffer(NULL, pixelBuffer, &formatDescription);
+
+    // Create the sample buffer using the pixel buffer and format description
+    CMSampleBufferCreateReadyWithImageBuffer(NULL, pixelBuffer, formatDescription, &timing, &sampleBuffer);
+
+    // Release the format description
+    CFRelease(formatDescription);
+    return sampleBuffer;
 }
 
 #pragma mark audio write
