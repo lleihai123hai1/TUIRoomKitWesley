@@ -18,7 +18,7 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @protocol LocalProcessVideoFrameDelegate <NSObject>
-- (void)onCallback:(LocalVideoFrame *)localVideoFrame;
+- (void)onCallbackLocalVideoFrame:(LocalVideoFrame *)localVideoFrame;
 @end
 
 @interface LocalProcessVideoFrame : NSObject

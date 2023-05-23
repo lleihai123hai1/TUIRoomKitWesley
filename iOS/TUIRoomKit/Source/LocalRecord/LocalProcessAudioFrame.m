@@ -25,8 +25,8 @@
 @implementation LocalProcessAudioFrame
 
 - (void)processAudioFrame:(TRTCAudioFrame*)frame {
-    if ([self.delegate respondsToSelector:@selector(onCallback:)]){
-        [self.delegate onCallback:[self convertToLocalAudioFrame:frame]];
+    if ([self.delegate respondsToSelector:@selector(onCallbackLocalAudioFrame:)]){
+        [self.delegate onCallbackLocalAudioFrame:[self convertToLocalAudioFrame:frame]];
     }
 }
 
