@@ -118,7 +118,7 @@ static int kVideoTimeScale = 1000;
                                     AVVideoScalingModeKey : AVVideoScalingModeResizeAspectFill,
                                     AVVideoCompressionPropertiesKey : compressionProperties };
     
-    NSDictionary *audioSetting = @{ AVEncoderBitRatePerChannelKey : @(28000),
+    NSDictionary *audioSetting = @{ AVEncoderBitRatePerChannelKey : @(48000),
                                     AVFormatIDKey : @(kAudioFormatMPEG4AAC),
                                     AVNumberOfChannelsKey : @(1),
                                     AVSampleRateKey : @(22050) };
