@@ -46,8 +46,10 @@
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         while (self.isProcessingFrame) {
             TRTCAudioFrame *frame = [self.videoFrameCache objectAtIndex:0];
-            [self.videoFrameCache removeObjectAtIndex:0];
-            [self.processAudioFrame processAudioFrame:frame];
+            if (frame) {
+                [self.videoFrameCache removeObjectAtIndex:0];
+                [self.processAudioFrame processAudioFrame:frame];
+            }
         }
     });
 }
