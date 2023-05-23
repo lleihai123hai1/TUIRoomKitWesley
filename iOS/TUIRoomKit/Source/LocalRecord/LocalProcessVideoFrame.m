@@ -25,8 +25,8 @@
 @implementation LocalProcessVideoFrame
 
 - (void)processVideoFrame:(TRTCVideoFrame*)frame {
-    if ([self.delegate respondsToSelector:@selector(onCallback:)]){
-        [self.delegate onCallback:[self convertToLocalVideoFrame:frame]];
+    if ([self.delegate respondsToSelector:@selector(onCallbackLocalVideoFrame:)]){
+        [self.delegate onCallbackLocalVideoFrame:[self convertToLocalVideoFrame:frame]];
     }
 }
 
