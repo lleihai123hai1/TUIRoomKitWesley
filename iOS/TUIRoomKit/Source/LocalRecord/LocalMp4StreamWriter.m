@@ -17,9 +17,6 @@ static int kVideoTimeScale = 1000;
     AVAssetWriterInput *_videoWriterInput;
     AVAssetWriterInput *_audioWriterInput;
     
-    CMVideoFormatDescriptionRef _videoFormatDescription;
-    CMAudioFormatDescriptionRef _audioFormatDescription;
-    
     BOOL _haveWrittenFirstAudioFrame;
     size_t _totalWrittenBytes;
     CMTime _lastFramePTS;
@@ -46,12 +43,6 @@ static int kVideoTimeScale = 1000;
 }
 
 - (void)dealloc {
-    if (_audioFormatDescription) {
-        CFRelease(_audioFormatDescription);
-    }
-    if (_videoFormatDescription) {
-        CFRelease(_videoFormatDescription);
-    }
     NSLog(@"LocalMp4StreamWriter dealloc");
 }
 
@@ -87,12 +78,6 @@ static int kVideoTimeScale = 1000;
 }
 
 - (void)clearData {
-    if (_audioFormatDescription) {
-        CFRelease(_audioFormatDescription);
-    }
-    if (_videoFormatDescription) {
-        CFRelease(_videoFormatDescription);
-    }
     _writer = nil;
     _audioWriterInput = nil;
     _videoWriterInput = nil;
@@ -177,68 +162,17 @@ static int kVideoTimeScale = 1000;
 
 #pragma mark LocalProcessAudioFrameDelegate & LocalProcessVideoFrameDelegate
 - (void)onCallbackLocalAudioFrame:(LocalAudioFrame*)audioFrame {
-    
+    [self writeLocalAudioFrame:audioFrame];
 }
 
 - (void)onCallbackLocalVideoFrame:(LocalVideoFrame *)localVideoFrame {
-    [self writeVideoFrame:localVideoFrame duration:50];
+    [self writeVideoFrame:localVideoFrame];
 }
 
-#pragma mark write
-- (NSInteger)writeVideoFrame:(LocalVideoFrame *)frame duration:(int64_t)duration {
-    CMBlockBufferRef dataBlock = NULL;
-    size_t frame_size = frame.videoFrame.data.length;
-    OSStatus status = CMBlockBufferCreateWithMemoryBlock(NULL,
-                                                       nil,
-                                                       frame_size,
-                                                       kCFAllocatorDefault,
-                                                       NULL,
-                                                       0,
-                                                       frame_size,
-                                                       kCMBlockBufferAssureMemoryNowFlag,
-                                                       &dataBlock);
-    if (status != kCMBlockBufferNoErr) {
-      NSLog(@"Create CMBlockBufferRef failed, code: %d",status);
-      return 0;
-    }
-    CMBlockBufferReplaceDataBytes((__bridge const void * _Nonnull)(frame.videoFrame.data), dataBlock, 0, frame_size);
-    CMSampleTimingInfo timingInfo;
-    timingInfo.presentationTimeStamp = CMTimeMake(frame.videoFrame.timestamp, kVideoTimeScale);
-    timingInfo.duration = CMTimeMake(duration, kVideoTimeScale);
-
-    size_t sampleSize[1] = {frame_size};
-
-    CMSampleBufferRef sampleBuffer;
-    status = CMSampleBufferCreate(kCFAllocatorDefault,
-                                dataBlock,
-                                true,  // dataReady
-                                NULL,  // makeDataReadyCallback
-                                NULL,  // makeDataReadyRefcon
-                                _videoFormatDescription,
-                                1,               // numSamples
-                                1,               // numSampleTimingEntries
-                                &timingInfo,     // CMSampleTimingInfo *sampleTimingArray
-                                1,               // numSampleSizeEntries
-                                sampleSize,      // sampleSizeArray
-                                &sampleBuffer);  // sampleBufferOut
-    CFRelease(dataBlock);
-    if (status != noErr) {
-        NSLog(@"Create CMSampleBuffer failed, code: %d",status);
-        return 0;
-    }
-
-    CFArrayRef attachments = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, YES);
-    CFMutableDictionaryRef dict = (CFMutableDictionaryRef)CFArrayGetValueAtIndex(attachments, 0);
-    BOOL result = [self writeVideoSampleBuffer:sampleBuffer];
-    if (result) {
-        _totalWrittenBytes += frame_size;
-        CMTime pts = CMSampleBufferGetPresentationTimeStamp(sampleBuffer);
-        if (CMTIME_IS_VALID(pts)) {
-            _lastFramePTS = CMTimeMaximum(_lastFramePTS, pts);
-        }
-    }
-    CFRelease(sampleBuffer);
-    return result ? frame_size : NO;
+#pragma mark video write
+- (BOOL)writeVideoFrame:(LocalVideoFrame *)frame {
+    CMSampleBufferRef videoSample = NULL;
+    return [self writeVideoSampleBuffer:videoSample];
 }
 
 - (BOOL)writeVideoSampleBuffer:(CMSampleBufferRef)videoSample {
@@ -258,4 +192,29 @@ static int kVideoTimeScale = 1000;
     }
     return appended;
 }
+
+#pragma mark audio write
+- (BOOL)writeLocalAudioFrame:(LocalAudioFrame *)frame {
+    CMSampleBufferRef audioSample = NULL;
+    return [self writeAudioSampleBuffer:audioSample];
+}
+
+- (BOOL)writeAudioSampleBuffer:(CMSampleBufferRef)audioSample {
+    BOOL appended = NO;
+    if (_audioWriterInput.readyForMoreMediaData && _writer.status == AVAssetWriterStatusWriting) {
+        if (audioSample != nil) {
+            if (!_startedSession) {
+                CMTime pts = CMSampleBufferGetPresentationTimeStamp(audioSample);
+                [_writer startSessionAtSourceTime:pts];
+                _startedSession = YES;
+            }
+            appended = [_audioWriterInput appendSampleBuffer:audioSample];
+            NSLog(@"Write video: %@",(appended ? @"yes" : @"no"));
+        }
+    } else {
+      NSLog(@"MP4Writer:appendVideo not appended, status= %ld",(long)_writer.status);
+    }
+    return appended;
+}
+
 @end
