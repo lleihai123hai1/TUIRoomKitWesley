@@ -188,10 +188,11 @@ static int kVideoTimeScale = 1000;
 }
 
 #pragma mark video write
-- (BOOL)writeLocalVideoFrame:(LocalVideoFrame *)frame {
+- (void)writeLocalVideoFrame:(LocalVideoFrame *)frame {
     [self startWriting];
     CMSampleBufferRef videoSample = [self sampleBufferFromVideoData:frame.pixelBuffer time:kCMTimeInvalid];
-    return [self writeVideoSampleBuffer:videoSample];
+    [self writeVideoSampleBuffer:videoSample];
+    CFRelease(videoSample);
 }
 
 - (BOOL)writeVideoSampleBuffer:(CMSampleBufferRef)videoSample {
@@ -217,27 +218,27 @@ static int kVideoTimeScale = 1000;
     if (!pixelBuffer) {
         return NULL;
     }
-
-    CMVideoFormatDescriptionRef videoInfo = NULL;
-    CMVideoFormatDescriptionCreateForImageBuffer(NULL, pixelBuffer, &videoInfo);
-    if (!videoInfo) {
-        return NULL;
-    }
-
-    CMSampleTimingInfo timing = {CMTimeMake(1, time.timescale), time, kCMTimeInvalid};
     CMSampleBufferRef sampleBuffer = NULL;
-    CMSampleBufferCreateForImageBuffer(
-    kCFAllocatorDefault, pixelBuffer, YES, NULL, NULL, videoInfo, &timing, &sampleBuffer);
-    CVPixelBufferUnlockBaseAddress(pixelBuffer, 0);
-    CFRelease(videoInfo);
+    CMFormatDescriptionRef formatDescription = NULL;
+    CMSampleTimingInfo timing = { kCMTimeInvalid, kCMTimeInvalid, kCMTimeInvalid };
+
+    // Get the format description from the pixel buffer
+    CMVideoFormatDescriptionCreateForImageBuffer(NULL, pixelBuffer, &formatDescription);
+
+    // Create the sample buffer using the pixel buffer and format description
+    CMSampleBufferCreateReadyWithImageBuffer(NULL, pixelBuffer, formatDescription, &timing, &sampleBuffer);
+
+    // Release the format description
+    CFRelease(formatDescription);
     return sampleBuffer;
 }
 
 #pragma mark audio write
-- (BOOL)writeLocalAudioFrame:(LocalAudioFrame *)frame {
+- (void)writeLocalAudioFrame:(LocalAudioFrame *)frame {
     [self startWriting];
     CMSampleBufferRef audioSample = [self sampleBufferFromAudioData:frame.audioFrame.data sampleRate:frame.audioFrame.sampleRate];
-    return [self writeAudioSampleBuffer:audioSample];
+    [self writeAudioSampleBuffer:audioSample];
+    CFRelease(audioSample);
 }
 
 - (BOOL)writeAudioSampleBuffer:(CMSampleBufferRef)audioSample {
