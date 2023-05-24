@@ -68,7 +68,7 @@
     format.sampleRate = 48000;
     format.samplesPerCall = (int)(format.sampleRate/100);
     format.mode = TRTCAudioFrameOperationModeReadOnly;
-    [[TRTCCloud sharedInstance] setCapturedRawAudioFrameDelegateFormat:format];
+    [[TRTCCloud sharedInstance] setLocalProcessedAudioFrameDelegateFormat:format];
     _videoFrame.delegate = _streamWriter;
     _audioFrame.delegate = _streamWriter;
     [[LocalVideoManager sharedInstance] binding:_videoFrame];
