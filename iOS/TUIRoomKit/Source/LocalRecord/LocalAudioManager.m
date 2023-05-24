@@ -67,7 +67,6 @@
         _audioFrameCache = [SafeNSMutableArray new];
     }
     return _audioFrameCache;
-    
 }
 
 @end
