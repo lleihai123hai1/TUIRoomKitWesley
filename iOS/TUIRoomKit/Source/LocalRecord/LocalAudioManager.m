@@ -27,7 +27,7 @@
 }
 
 - (void)addTRTCAudioFrame:(TRTCAudioFrame *)frame {
-    [self.audioFrameCache addObject:frame];
+    [self.audioFrameCache addObject:[[LocalAudioFrame alloc] init:frame]];
 }
 
 - (void)binding:(LocalProcessAudioFrame *)processAudioFrame {
@@ -45,7 +45,7 @@
     self.isProcessingFrame = YES;
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         while (self.isProcessingFrame) {
-            TRTCAudioFrame *frame = [self.audioFrameCache objectAtIndex:0];
+            LocalAudioFrame *frame = [self.audioFrameCache objectAtIndex:0];
             if (frame) {
                 [self.audioFrameCache removeObjectAtIndex:0];
                 [self.processAudioFrame processAudioFrame:frame];

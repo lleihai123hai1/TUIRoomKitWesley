@@ -17,9 +17,10 @@
 @implementation LocalVideoFrame
 
 - (instancetype)init:(TRTCVideoFrame *)videoFrame {
-    self = [super init];
-    _videoFrame = videoFrame;
-    self.pixelBuffer = videoFrame.pixelBuffer;
+    if (self = [super init]) {
+        _videoFrame = videoFrame;
+        self.pixelBuffer = videoFrame.pixelBuffer;
+    }
     return self;
 }
 
