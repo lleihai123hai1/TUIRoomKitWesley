@@ -36,7 +36,7 @@
 }
 
 - (void)addTRTCVideoFrame:(TRTCVideoFrame *)frame {
-    [self.videoFrameCache addObject:frame];
+    [self.videoFrameCache addObject:[[LocalVideoFrame alloc] init:frame]];
 }
 
 - (void)binding:(LocalProcessVideoFrame *)processVideoFrame {
@@ -54,7 +54,7 @@
     self.isProcessingFrame = YES;
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         while (self.isProcessingFrame) {
-            TRTCVideoFrame *frame = [self.videoFrameCache objectAtIndex:0];
+            LocalVideoFrame *frame = [self.videoFrameCache objectAtIndex:0];
             if (frame) {
                 [self.videoFrameCache removeObjectAtIndex:0];
                 [self.processVideoFrame processVideoFrame:frame];
@@ -65,6 +65,7 @@
 
 - (void)stopProcessingFrame {
     self.isProcessingFrame = NO;
+    [self.videoFrameCache removeAllObjects];
     NSLog(@"------------ stopProcessingFrame video");
 }
 
