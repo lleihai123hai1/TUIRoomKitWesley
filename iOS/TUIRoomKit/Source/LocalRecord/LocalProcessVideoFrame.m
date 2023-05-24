@@ -6,14 +6,45 @@
 //
 
 #import "LocalProcessVideoFrame.h"
-
+#import "LocalRecordHeader.h"
 
 @interface LocalVideoFrame(){
+    TRTCVideoFrame *_videoFrame;
 }
 
 @end
 
 @implementation LocalVideoFrame
+
+- (instancetype)init:(TRTCVideoFrame *)videoFrame {
+    self = [super init];
+    _videoFrame = videoFrame;
+    self.pixelBuffer = videoFrame.pixelBuffer;
+    return self;
+}
+
+- (TRTCVideoFrame *)videoFrame {
+    return _videoFrame;
+}
+
+- (void)setPixelBuffer:(CVPixelBufferRef)pixelBuffer {
+    if (_pixelBuffer && pixelBuffer && CFEqual(pixelBuffer, _pixelBuffer)) {
+        return;
+    }
+    if (pixelBuffer) {
+        CVPixelBufferRetain(pixelBuffer);
+    }
+    if (_pixelBuffer) {
+        CVPixelBufferRelease(_pixelBuffer);
+    }
+    _pixelBuffer = pixelBuffer;
+}
+
+- (void)dealloc {
+    if (self.pixelBuffer) {
+        CVPixelBufferRelease(self.pixelBuffer);
+    }
+}
 @end
 
 
@@ -24,16 +55,10 @@
 
 @implementation LocalProcessVideoFrame
 
-- (void)processVideoFrame:(TRTCVideoFrame*)frame {
+- (void)processVideoFrame:(LocalVideoFrame*)frame {
     if ([self.delegate respondsToSelector:@selector(onCallbackLocalVideoFrame:)]){
-        [self.delegate onCallbackLocalVideoFrame:[self convertToLocalVideoFrame:frame]];
+        [self.delegate onCallbackLocalVideoFrame:frame];
     }
-}
-
-- (LocalVideoFrame *)convertToLocalVideoFrame:(TRTCVideoFrame*)frame {
-    LocalVideoFrame *videoFrame = [LocalVideoFrame new];
-    videoFrame.videoFrame = frame;
-    return videoFrame;
 }
 
 @end
