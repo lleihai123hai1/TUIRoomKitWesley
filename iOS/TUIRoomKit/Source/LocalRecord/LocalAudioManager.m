@@ -12,7 +12,7 @@
 
 @interface LocalAudioManager()
 @property (atomic,weak) LocalProcessAudioFrame* processAudioFrame;
-@property (nonatomic,strong) SafeNSMutableArray* videoFrameCache;
+@property (nonatomic,strong) SafeNSMutableArray* audioFrameCache;
 @property (atomic, assign) BOOL isProcessingFrame;
 @end
 
@@ -27,7 +27,7 @@
 }
 
 - (void)addTRTCAudioFrame:(TRTCAudioFrame *)frame {
-    [self.videoFrameCache addObject:frame];
+    [self.audioFrameCache addObject:frame];
 }
 
 - (void)binding:(LocalProcessAudioFrame *)processAudioFrame {
@@ -45,9 +45,9 @@
     self.isProcessingFrame = YES;
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         while (self.isProcessingFrame) {
-            TRTCAudioFrame *frame = [self.videoFrameCache objectAtIndex:0];
+            TRTCAudioFrame *frame = [self.audioFrameCache objectAtIndex:0];
             if (frame) {
-                [self.videoFrameCache removeObjectAtIndex:0];
+                [self.audioFrameCache removeObjectAtIndex:0];
                 [self.processAudioFrame processAudioFrame:frame];
             }
         }
@@ -56,16 +56,17 @@
 
 - (void)stopProcessingFrame {
     self.isProcessingFrame = NO;
+    [self.audioFrameCache removeAllObjects];
     NSLog(@"------------ stopProcessingFrame audio");
 }
 
 #pragma mark set/get
 
-- (SafeNSMutableArray *)videoFrameCache {
-    if (!_videoFrameCache) {
-        _videoFrameCache = [SafeNSMutableArray new];
+- (SafeNSMutableArray *)audioFrameCache {
+    if (!_audioFrameCache) {
+        _audioFrameCache = [SafeNSMutableArray new];
     }
-    return _videoFrameCache;
+    return _audioFrameCache;
     
 }
 

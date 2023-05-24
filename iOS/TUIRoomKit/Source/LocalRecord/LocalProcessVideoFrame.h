@@ -11,10 +11,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class TRTCVideoFrame;
 @interface LocalVideoFrame : NSObject
-@property (nonatomic, strong) TRTCVideoFrame *videoFrame;
-// 视频帧的显示时间戳 presentation timestamp，单位：ms
-@property (nonatomic, assign) uint64_t ptsMs;
-@property (nonatomic, assign) uint64_t dtsMs;
+- (instancetype)init:(TRTCVideoFrame *)videoFrame;
+@property(nonatomic, assign) CVPixelBufferRef pixelBuffer;
+@property (nonatomic, readonly) TRTCVideoFrame *videoFrame;
 @end
 
 @protocol LocalProcessVideoFrameDelegate <NSObject>

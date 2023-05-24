@@ -184,13 +184,13 @@ static int kVideoTimeScale = 1000;
 
 - (void)onCallbackLocalVideoFrame:(LocalVideoFrame *)localVideoFrame {
     _videoFrame = localVideoFrame;
-//    [self writeLocalVideoFrame:localVideoFrame];
+    [self writeLocalVideoFrame:localVideoFrame];
 }
 
 #pragma mark video write
 - (BOOL)writeLocalVideoFrame:(LocalVideoFrame *)frame {
     [self startWriting];
-    CMSampleBufferRef videoSample = [self sampleBufferFromVideoData:frame.videoFrame.pixelBuffer];
+    CMSampleBufferRef videoSample = [self sampleBufferFromVideoData:frame.pixelBuffer time:kCMTimeInvalid];
     return [self writeVideoSampleBuffer:videoSample];
 }
 
@@ -213,19 +213,23 @@ static int kVideoTimeScale = 1000;
     return appended;
 }
 
-- (CMSampleBufferRef)sampleBufferFromVideoData:(CVPixelBufferRef)pixelBuffer {
+- (CMSampleBufferRef)sampleBufferFromVideoData:(CVPixelBufferRef)pixelBuffer time:(CMTime)time {
+    if (!pixelBuffer) {
+        return NULL;
+    }
+
+    CMVideoFormatDescriptionRef videoInfo = NULL;
+    CMVideoFormatDescriptionCreateForImageBuffer(NULL, pixelBuffer, &videoInfo);
+    if (!videoInfo) {
+        return NULL;
+    }
+
+    CMSampleTimingInfo timing = {CMTimeMake(1, time.timescale), time, kCMTimeInvalid};
     CMSampleBufferRef sampleBuffer = NULL;
-    CMFormatDescriptionRef formatDescription = NULL;
-    CMSampleTimingInfo timing = { kCMTimeInvalid, kCMTimeInvalid, kCMTimeInvalid };
-
-    // Get the format description from the pixel buffer
-    CMVideoFormatDescriptionCreateForImageBuffer(NULL, pixelBuffer, &formatDescription);
-
-    // Create the sample buffer using the pixel buffer and format description
-    CMSampleBufferCreateReadyWithImageBuffer(NULL, pixelBuffer, formatDescription, &timing, &sampleBuffer);
-
-    // Release the format description
-    CFRelease(formatDescription);
+    CMSampleBufferCreateForImageBuffer(
+    kCFAllocatorDefault, pixelBuffer, YES, NULL, NULL, videoInfo, &timing, &sampleBuffer);
+    CVPixelBufferUnlockBaseAddress(pixelBuffer, 0);
+    CFRelease(videoInfo);
     return sampleBuffer;
 }
 
