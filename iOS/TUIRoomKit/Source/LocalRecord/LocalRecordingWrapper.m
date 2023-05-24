@@ -89,7 +89,7 @@
     if (frame.timestamp <= 0) {
         frame.timestamp = [TRTCCloud generateCustomPTS];
     }
-//    [[LocalVideoManager sharedInstance] addTRTCVideoFrame:frame];
+    [[LocalVideoManager sharedInstance] addTRTCVideoFrame:frame];
 }
 
 #pragma mark TRTCAudioFrameDelegate

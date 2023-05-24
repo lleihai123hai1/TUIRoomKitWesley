@@ -69,7 +69,6 @@ static int kVideoTimeScale = 1000;
         return;
     }
     [self resetData];
-    [self setUpWriter];
     _isRecording = YES;
 }
 
@@ -89,21 +88,30 @@ static int kVideoTimeScale = 1000;
     _audioFrame  = nil;
 }
 
+- (void)startWriting {
+    if ((!_audioFrame || !_videoFrame) || _writer) {
+        return;
+    }
+    [self setUpWriter];
+    [self setAudioWriterInput];
+    [self setVideoWriterInput];
+    [_writer startWriting];
+}
+
 - (void)setUpWriter {
+    if (_writer) {
+        return;
+    }
     NSError *error = nil;
     NSURL *fileUrl = [NSURL fileURLWithPath:self.outputFilePath];
     // 根据文件名扩展类型，确定具体容器格式
     AVFileType mediaFileType = AVFileTypeMPEG4;
     _writer = [[AVAssetWriter alloc] initWithURL:fileUrl fileType:mediaFileType error:&error];
-    _writer.shouldOptimizeForNetworkUse = YES;  // 把 moov 放在文件的前面
-    if (_writer == nil) {
-        NSLog(@"Create AVAssetWriter failed, error: %@",error.localizedDescription);
-    }
-    [_writer startWriting];
+    _writer.shouldOptimizeForNetworkUse = YES;
 }
 
 - (void)setAudioWriterInput {
-    if (_audioWriterInput || !_audioFrame || !_writer || !_isRecording) {
+    if (_audioWriterInput || !_audioFrame || !_writer) {
         return;
     }
     NSDictionary *audioSetting = @{ AVEncoderBitRatePerChannelKey : @(_audioFrame.audioFrame.sampleRate),
@@ -115,10 +123,11 @@ static int kVideoTimeScale = 1000;
     if ([_writer canAddInput:_audioWriterInput]) {
         [_writer addInput:_audioWriterInput];
     }
+    
 }
 
 - (void)setVideoWriterInput {
-    if (_videoWriterInput || !_videoFrame || !_writer  || !_isRecording) {
+    if (_videoWriterInput || !_videoFrame || !_writer) {
         return;
     }
     
@@ -175,12 +184,12 @@ static int kVideoTimeScale = 1000;
 
 - (void)onCallbackLocalVideoFrame:(LocalVideoFrame *)localVideoFrame {
     _videoFrame = localVideoFrame;
-    [self writeLocalVideoFrame:localVideoFrame];
+//    [self writeLocalVideoFrame:localVideoFrame];
 }
 
 #pragma mark video write
 - (BOOL)writeLocalVideoFrame:(LocalVideoFrame *)frame {
-    [self setVideoWriterInput];
+    [self startWriting];
     CMSampleBufferRef videoSample = [self sampleBufferFromVideoData:frame.videoFrame.pixelBuffer];
     return [self writeVideoSampleBuffer:videoSample];
 }
@@ -222,7 +231,7 @@ static int kVideoTimeScale = 1000;
 
 #pragma mark audio write
 - (BOOL)writeLocalAudioFrame:(LocalAudioFrame *)frame {
-    [self setAudioWriterInput];
+    [self startWriting];
     CMSampleBufferRef audioSample = [self sampleBufferFromAudioData:frame.audioFrame.data sampleRate:frame.audioFrame.sampleRate];
     return [self writeAudioSampleBuffer:audioSample];
 }
