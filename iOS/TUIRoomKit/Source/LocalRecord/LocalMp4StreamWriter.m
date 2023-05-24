@@ -29,6 +29,9 @@ static int kVideoTimeScale = 1000;
     
     BOOL _isRecording;
     BOOL _startedSession;
+    
+    LocalVideoFrame* _videoFrame;
+    LocalAudioFrame* _audioFrame;
 }
 @property (nonatomic, strong) NSString *outputFilePath;
 @end
@@ -66,9 +69,7 @@ static int kVideoTimeScale = 1000;
         return;
     }
     [self resetData];
-    if ([self setUpWriter]) {
-        [_writer startWriting];
-    }
+    [self setUpWriter];
     _isRecording = YES;
 }
 
@@ -84,9 +85,11 @@ static int kVideoTimeScale = 1000;
     _writer = nil;
     _audioWriterInput = nil;
     _videoWriterInput = nil;
+    _videoFrame = nil;
+    _audioFrame  = nil;
 }
 
-- (BOOL)setUpWriter {
+- (void)setUpWriter {
     NSError *error = nil;
     NSURL *fileUrl = [NSURL fileURLWithPath:self.outputFilePath];
     // 根据文件名扩展类型，确定具体容器格式
@@ -95,10 +98,31 @@ static int kVideoTimeScale = 1000;
     _writer.shouldOptimizeForNetworkUse = YES;  // 把 moov 放在文件的前面
     if (_writer == nil) {
         NSLog(@"Create AVAssetWriter failed, error: %@",error.localizedDescription);
-        return NO;
+    }
+    [_writer startWriting];
+}
+
+- (void)setAudioWriterInput {
+    if (_audioWriterInput || !_audioFrame || !_writer || !_isRecording) {
+        return;
+    }
+    NSDictionary *audioSetting = @{ AVEncoderBitRatePerChannelKey : @(_audioFrame.audioFrame.sampleRate),
+                                    AVFormatIDKey : @(kAudioFormatMPEG4AAC),
+                                    AVNumberOfChannelsKey : @(_audioFrame.audioFrame.channels),
+                                    AVSampleRateKey : @(44100) };
+    _audioWriterInput =  [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeAudio outputSettings:audioSetting];
+    _audioWriterInput.expectsMediaDataInRealTime = YES;
+    if ([_writer canAddInput:_audioWriterInput]) {
+        [_writer addInput:_audioWriterInput];
+    }
+}
+
+- (void)setVideoWriterInput {
+    if (_videoWriterInput || !_videoFrame || !_writer  || !_isRecording) {
+        return;
     }
     
-    CGSize size =  [UIScreen mainScreen].bounds.size;
+    CGSize size =  CGSizeMake(_videoFrame.videoFrame.width, _videoFrame.videoFrame.height);
     NSInteger numPixels = size.width * size.height;
     //每像素比特
     CGFloat bitsPerPixel = 12.0;
@@ -109,39 +133,19 @@ static int kVideoTimeScale = 1000;
                                              AVVideoExpectedSourceFrameRateKey : @(15),
                                              AVVideoMaxKeyFrameIntervalKey : @(10),
                                              AVVideoProfileLevelKey : AVVideoProfileLevelH264BaselineAutoLevel };
-    
-    
     //视频属性
     NSDictionary *videoSetting = @{ AVVideoCodecKey : AVVideoCodecTypeH264,
                                     AVVideoWidthKey : @(size.height * 2),
                                     AVVideoHeightKey : @(size.width * 2),
                                     AVVideoScalingModeKey : AVVideoScalingModeResizeAspectFill,
                                     AVVideoCompressionPropertiesKey : compressionProperties };
-    
-    NSDictionary *audioSetting = @{ AVEncoderBitRatePerChannelKey : @(48000),
-                                    AVFormatIDKey : @(kAudioFormatMPEG4AAC),
-                                    AVNumberOfChannelsKey : @(1),
-                                    AVSampleRateKey : @(22050) };
-    _audioWriterInput =  [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeAudio outputSettings:audioSetting];
-    _audioWriterInput.expectsMediaDataInRealTime = YES;
-    if ([_writer canAddInput:_audioWriterInput]) {
-        [_writer addInput:_audioWriterInput];
-    } else {
-        NSLog(@"Add audio input failed");
-        return NO;
-    }
-    
     _videoWriterInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeVideo outputSettings:videoSetting];
     _videoWriterInput.expectsMediaDataInRealTime = YES;
-    _videoWriterInput.transform = CGAffineTransformMakeRotation(M_PI/2.0);
+    _videoWriterInput.transform = CGAffineTransformMakeRotation(_videoFrame.videoFrame.rotation*M_PI/2.0);
     _videoWriterInput.mediaTimeScale = kVideoTimeScale;
     if ([_writer canAddInput:_videoWriterInput]) {
         [_writer addInput:_videoWriterInput];
-    } else {
-        NSLog(@"Add video input failed");
-        return NO;
     }
-    return YES;
 }
 
 #pragma mark get/set
@@ -165,15 +169,18 @@ static int kVideoTimeScale = 1000;
 
 #pragma mark LocalProcessAudioFrameDelegate & LocalProcessVideoFrameDelegate
 - (void)onCallbackLocalAudioFrame:(LocalAudioFrame*)audioFrame {
+    _audioFrame = audioFrame;
     [self writeLocalAudioFrame:audioFrame];
 }
 
 - (void)onCallbackLocalVideoFrame:(LocalVideoFrame *)localVideoFrame {
+    _videoFrame = localVideoFrame;
     [self writeLocalVideoFrame:localVideoFrame];
 }
 
 #pragma mark video write
 - (BOOL)writeLocalVideoFrame:(LocalVideoFrame *)frame {
+    [self setVideoWriterInput];
     CMSampleBufferRef videoSample = [self sampleBufferFromVideoData:frame.videoFrame.pixelBuffer];
     return [self writeVideoSampleBuffer:videoSample];
 }
@@ -185,7 +192,7 @@ static int kVideoTimeScale = 1000;
             if (!_startedSession) {
 //                CMTime pts = CMSampleBufferGetPresentationTimeStamp(videoSample);
                 CMTime pts = CMTimeMakeWithSeconds(2.5, 30);
-                [_writer startSessionAtSourceTime:pts];
+                [_writer startSessionAtSourceTime:kCMTimeZero];
                 _startedSession = YES;
             }
             appended = [_videoWriterInput appendSampleBuffer:videoSample];
@@ -215,6 +222,7 @@ static int kVideoTimeScale = 1000;
 
 #pragma mark audio write
 - (BOOL)writeLocalAudioFrame:(LocalAudioFrame *)frame {
+    [self setAudioWriterInput];
     CMSampleBufferRef audioSample = [self sampleBufferFromAudioData:frame.audioFrame.data sampleRate:frame.audioFrame.sampleRate];
     return [self writeAudioSampleBuffer:audioSample];
 }
@@ -224,9 +232,9 @@ static int kVideoTimeScale = 1000;
     if (_audioWriterInput.readyForMoreMediaData && _writer.status == AVAssetWriterStatusWriting) {
         if (audioSample != nil) {
             if (!_startedSession) {
-//                CMTime pts = CMSampleBufferGetPresentationTimeStamp(audioSample);
-                CMTime pts = CMTimeMakeWithSeconds(2.5, 30);
-                [_writer startSessionAtSourceTime:pts];
+                CMTime pts = CMSampleBufferGetPresentationTimeStamp(audioSample);
+                pts = CMTimeMakeWithSeconds(2.5, 30);
+                [_writer startSessionAtSourceTime:kCMTimeZero];
                 _startedSession = YES;
             }
             appended = [_audioWriterInput appendSampleBuffer:audioSample];
