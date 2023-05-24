@@ -9,11 +9,23 @@
 
 
 @interface LocalAudioFrame(){
+    TRTCAudioFrame *_audioFrame;
 }
 
 @end
 
 @implementation LocalAudioFrame
+
+- (instancetype)init:(TRTCAudioFrame *)audioFrame {
+    if (self = [super init]) {
+        _audioFrame = audioFrame;
+    }
+    return self;
+}
+- (TRTCAudioFrame *)audioFrame {
+    return _audioFrame;
+}
+
 @end
 
 
@@ -24,15 +36,10 @@
 
 @implementation LocalProcessAudioFrame
 
-- (void)processAudioFrame:(TRTCAudioFrame*)frame {
+- (void)processAudioFrame:(LocalAudioFrame*)frame {
     if ([self.delegate respondsToSelector:@selector(onCallbackLocalAudioFrame:)]){
-        [self.delegate onCallbackLocalAudioFrame:[self convertToLocalAudioFrame:frame]];
+        [self.delegate onCallbackLocalAudioFrame:frame];
     }
 }
 
-- (LocalAudioFrame *)convertToLocalAudioFrame:(TRTCAudioFrame*)frame {
-    LocalAudioFrame *audioFrame = [LocalAudioFrame new];
-    audioFrame.audioFrame = frame;
-    return audioFrame;
-}
 @end
