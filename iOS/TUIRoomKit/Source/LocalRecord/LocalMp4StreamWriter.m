@@ -191,7 +191,7 @@ static int kVideoTimeScale = 1000;
 #pragma mark video write
 - (void)writeLocalVideoFrame:(LocalVideoFrame *)frame {
     [self startWriting];
-    CMSampleBufferRef videoSample = [self sampleBufferFromVideoData:frame.pixelBuffer time:kCMTimeInvalid];
+    CMSampleBufferRef videoSample = [self sampleBufferFromVideoData:frame.videoFrame.pixelBuffer time:kCMTimeInvalid];
     [self writeVideoSampleBuffer:videoSample];
     CFRelease(videoSample);
 }
