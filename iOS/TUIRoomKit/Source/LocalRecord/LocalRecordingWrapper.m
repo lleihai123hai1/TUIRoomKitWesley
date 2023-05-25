@@ -20,6 +20,7 @@
     LocalProcessAudioFrame *_audioFrame;
     
 }
+@property (nonatomic,strong)NSFileHandle *fileHandle;
 @end
 
 @implementation LocalRecordingWrapper
@@ -58,6 +59,7 @@
         [self unsubscribeDelegateCallback];
         [_streamWriter stopRecording];
     }
+    [self.fileHandle closeFile];
 }
 
 - (void)subscribeDelegateCallback {
@@ -95,6 +97,20 @@
 #pragma mark TRTCAudioFrameDelegate
 - (void)onCapturedRawAudioFrame:(TRTCAudioFrame *)frame {
     [[LocalAudioManager sharedInstance] addTRTCAudioFrame:frame];
+//    [self.fileHandle writeData:frame.data error:nil];
+}
+
+- (NSFileHandle *)fileHandle {
+    if (!_fileHandle) {
+        NSString *filePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"test.txt"];
+        if ([[NSFileManager defaultManager] fileExistsAtPath:filePath]) {
+            [[NSFileManager defaultManager] removeItemAtPath:filePath error:nil];
+        }
+        [[NSFileManager defaultManager] createFileAtPath:filePath contents:nil attributes:nil];
+        _fileHandle = [NSFileHandle fileHandleForWritingAtPath:filePath];
+
+    }
+    return _fileHandle;
 }
 
 @end
