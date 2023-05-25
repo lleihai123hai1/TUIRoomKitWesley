@@ -109,7 +109,11 @@ static int kVideoTimeScale = 1000;
     AVFileType mediaFileType = AVFileTypeMPEG4;
     _writer = [[AVAssetWriter alloc] initWithURL:fileUrl fileType:mediaFileType error:&error];
     _writer.shouldOptimizeForNetworkUse = YES;
-    _writer.delegate = self;
+    if (@available(iOS 14.0, *)) {
+        _writer.delegate = self;
+    } else {
+        // Fallback on earlier versions
+    }
 }
 
 - (void)setAudioWriterInput {
