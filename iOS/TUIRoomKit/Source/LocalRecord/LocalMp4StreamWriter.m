@@ -74,6 +74,8 @@ static int kVideoTimeScale = 1000;
 
 - (void)stopRecording {
     _isRecording = NO;
+    [_audioWriterInput markAsFinished];
+    [_videoWriterInput markAsFinished];
     [_writer finishWritingWithCompletionHandler:^{
         NSLog(@"finishWritingWithCompletionHandler");
     }];
@@ -185,7 +187,7 @@ static int kVideoTimeScale = 1000;
 
 - (void)onCallbackLocalVideoFrame:(LocalVideoFrame *)localVideoFrame {
     _videoFrame = localVideoFrame;
-    [self writeLocalVideoFrame:localVideoFrame];
+//    [self writeLocalVideoFrame:localVideoFrame];
 }
 
 #pragma mark video write
