@@ -11,8 +11,7 @@
 
 static int kVideoTimeScale = 1000;
 
-@interface LocalMp4StreamWriter()
-{
+@interface LocalMp4StreamWriter()<AVAssetWriterDelegate> {
     AVAssetWriter *_writer;
     AVAssetWriterInput *_videoWriterInput;
     AVAssetWriterInput *_audioWriterInput;
@@ -110,6 +109,7 @@ static int kVideoTimeScale = 1000;
     AVFileType mediaFileType = AVFileTypeMPEG4;
     _writer = [[AVAssetWriter alloc] initWithURL:fileUrl fileType:mediaFileType error:&error];
     _writer.shouldOptimizeForNetworkUse = YES;
+    _writer.delegate = self;
 }
 
 - (void)setAudioWriterInput {
@@ -332,6 +332,16 @@ static int kVideoTimeScale = 1000;
     CFRelease(blockBuffer);
     CFRelease(formatDesc);
     return sampleBuffer;
+}
+
+
+#pragma mark dele
+- (void)assetWriter:(AVAssetWriter *)writer didOutputSegmentData:(NSData *)segmentData segmentType:(AVAssetSegmentType)segmentType segmentReport:(nullable AVAssetSegmentReport *)segmentReport {
+    
+}
+
+- (void)assetWriter:(AVAssetWriter *)writer didOutputSegmentData:(NSData *)segmentData segmentType:(AVAssetSegmentType)segmentType {
+    
 }
 
 @end
