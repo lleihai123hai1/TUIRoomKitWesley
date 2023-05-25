@@ -132,21 +132,21 @@ static int kVideoTimeScale = 1000;
     }
     
     CGSize size =  CGSizeMake(_videoFrame.videoFrame.width, _videoFrame.videoFrame.height);
-//    NSInteger numPixels = size.width * size.height;
+    NSInteger numPixels = size.width * size.height;
 //    //每像素比特
-//    CGFloat bitsPerPixel = 12.0;
-//    NSInteger bitsPerSecond = numPixels * bitsPerPixel;
+    CGFloat bitsPerPixel = 12.0;
+    NSInteger bitsPerSecond = numPixels * bitsPerPixel;
     
     // 码率和帧率设置
-    NSDictionary *compressionProperties = @{ AVVideoAverageBitRateKey : @(900),
+    NSDictionary *compressionProperties = @{ AVVideoAverageBitRateKey : @(bitsPerSecond),
                                              AVVideoExpectedSourceFrameRateKey : @(15),
                                              AVVideoMaxKeyFrameIntervalKey : @(10),
                                              AVVideoProfileLevelKey : AVVideoProfileLevelH264BaselineAutoLevel };
     //视频属性
     
     NSDictionary *videoSetting = @{ AVVideoCodecKey : AVVideoCodecTypeH264,
-                                    AVVideoWidthKey : @(size.height*UIScreen.mainScreen.scale),
-                                    AVVideoHeightKey : @(size.width*UIScreen.mainScreen.scale),
+                                    AVVideoWidthKey : @(size.height),
+                                    AVVideoHeightKey : @(size.width),
                                     AVVideoScalingModeKey : AVVideoScalingModeResizeAspectFill,
                                     AVVideoCompressionPropertiesKey : compressionProperties };
     _videoWriterInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeVideo outputSettings:videoSetting];
