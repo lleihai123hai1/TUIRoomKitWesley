@@ -11,7 +11,7 @@
 @interface LocalVideoFrame(){
     TRTCVideoFrame *_videoFrame;
 }
-
+@property(nonatomic, assign) CVPixelBufferRef pixelBuffer;
 @end
 
 @implementation LocalVideoFrame
