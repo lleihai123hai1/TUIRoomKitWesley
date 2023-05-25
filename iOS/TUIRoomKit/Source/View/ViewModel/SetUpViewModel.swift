@@ -249,7 +249,7 @@ class SetUpViewModel {
         param.videoBitrate = Int32(engineManager.store.videoSetting.videoBitrate)
         param.videoFps = Int32(engineManager.store.videoSetting.videoFps)
         param.resMode = .portrait
-        param.enableAdjustRes = true
+        param.enableAdjustRes = false
         EngineManager.shared.roomEngine.getTRTCCloud().setVideoEncoderParam(param)
     }
     
