@@ -96,8 +96,10 @@
 
 #pragma mark TRTCAudioFrameDelegate
 - (void)onCapturedRawAudioFrame:(TRTCAudioFrame *)frame {
+    if (frame.timestamp <= 0) {
+        frame.timestamp = [TRTCCloud generateCustomPTS];
+    }
     [[LocalAudioManager sharedInstance] addTRTCAudioFrame:frame];
-//    [self.fileHandle writeData:frame.data error:nil];
 }
 
 - (NSFileHandle *)fileHandle {
