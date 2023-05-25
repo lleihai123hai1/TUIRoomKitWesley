@@ -12,7 +12,6 @@ NS_ASSUME_NONNULL_BEGIN
 @class TRTCVideoFrame;
 @interface LocalVideoFrame : NSObject
 - (instancetype)init:(TRTCVideoFrame *)videoFrame;
-@property(nonatomic, assign) CVPixelBufferRef pixelBuffer;
 @property (nonatomic, readonly) TRTCVideoFrame *videoFrame;
 @end
 
@@ -22,7 +21,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface LocalProcessVideoFrame : NSObject
 @property (nonatomic,weak) id<LocalProcessVideoFrameDelegate> delegate;
-- (void)processVideoFrame:(TRTCVideoFrame*)frame;
+- (void)processVideoFrame:(LocalVideoFrame*)frame;
 @end
 
 NS_ASSUME_NONNULL_END
