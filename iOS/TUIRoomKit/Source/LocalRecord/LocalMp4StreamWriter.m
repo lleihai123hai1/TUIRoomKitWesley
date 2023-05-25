@@ -132,20 +132,21 @@ static int kVideoTimeScale = 1000;
     }
     
     CGSize size =  CGSizeMake(_videoFrame.videoFrame.width, _videoFrame.videoFrame.height);
-    NSInteger numPixels = size.width * size.height;
-    //每像素比特
-    CGFloat bitsPerPixel = 12.0;
-    NSInteger bitsPerSecond = numPixels * bitsPerPixel;
+//    NSInteger numPixels = size.width * size.height;
+//    //每像素比特
+//    CGFloat bitsPerPixel = 12.0;
+//    NSInteger bitsPerSecond = numPixels * bitsPerPixel;
     
     // 码率和帧率设置
-    NSDictionary *compressionProperties = @{ AVVideoAverageBitRateKey : @(bitsPerSecond),
+    NSDictionary *compressionProperties = @{ AVVideoAverageBitRateKey : @(900),
                                              AVVideoExpectedSourceFrameRateKey : @(15),
                                              AVVideoMaxKeyFrameIntervalKey : @(10),
                                              AVVideoProfileLevelKey : AVVideoProfileLevelH264BaselineAutoLevel };
     //视频属性
+    
     NSDictionary *videoSetting = @{ AVVideoCodecKey : AVVideoCodecTypeH264,
-                                    AVVideoWidthKey : @(size.height * 2),
-                                    AVVideoHeightKey : @(size.width * 2),
+                                    AVVideoWidthKey : @(size.height*UIScreen.mainScreen.scale),
+                                    AVVideoHeightKey : @(size.width*UIScreen.mainScreen.scale),
                                     AVVideoScalingModeKey : AVVideoScalingModeResizeAspectFill,
                                     AVVideoCompressionPropertiesKey : compressionProperties };
     _videoWriterInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeVideo outputSettings:videoSetting];
@@ -197,11 +198,9 @@ static int kVideoTimeScale = 1000;
 
 - (BOOL)writeVideoSampleBuffer:(CMSampleBufferRef)videoSample {
     BOOL appended = NO;
-    if (_videoWriterInput.readyForMoreMediaData && _writer.status == AVAssetWriterStatusWriting) {
+    if (_videoWriterInput.readyForMoreMediaData && _writer.status == AVAssetWriterStatusWriting && CMSampleBufferDataIsReady(videoSample)) {
         if (videoSample != nil) {
             if (!_startedSession) {
-//                CMTime pts = CMSampleBufferGetPresentationTimeStamp(videoSample);
-                CMTime pts = CMTimeMakeWithSeconds(2.5, 30);
                 [_writer startSessionAtSourceTime:kCMTimeZero];
                 _startedSession = YES;
             }
@@ -243,11 +242,9 @@ static int kVideoTimeScale = 1000;
 
 - (BOOL)writeAudioSampleBuffer:(CMSampleBufferRef)audioSample {
     BOOL appended = NO;
-    if (_audioWriterInput.readyForMoreMediaData && _writer.status == AVAssetWriterStatusWriting) {
+    if (_audioWriterInput.readyForMoreMediaData && _writer.status == AVAssetWriterStatusWriting && CMSampleBufferDataIsReady(audioSample)) {
         if (audioSample != nil) {
             if (!_startedSession) {
-                CMTime pts = CMSampleBufferGetPresentationTimeStamp(audioSample);
-                pts = CMTimeMakeWithSeconds(2.5, 30);
                 [_writer startSessionAtSourceTime:kCMTimeZero];
                 _startedSession = YES;
             }
