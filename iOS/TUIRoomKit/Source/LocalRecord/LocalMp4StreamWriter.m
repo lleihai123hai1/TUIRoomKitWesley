@@ -11,7 +11,7 @@
 
 static int kVideoTimeScale = 1000;
 
-@interface LocalMp4StreamWriter()<AVAssetWriterDelegate> {
+@interface LocalMp4StreamWriter(){
     AVAssetWriter *_writer;
     AVAssetWriterInput *_videoWriterInput;
     AVAssetWriterInput *_audioWriterInput;
@@ -109,11 +109,6 @@ static int kVideoTimeScale = 1000;
     AVFileType mediaFileType = AVFileTypeMPEG4;
     _writer = [[AVAssetWriter alloc] initWithURL:fileUrl fileType:mediaFileType error:&error];
     _writer.shouldOptimizeForNetworkUse = YES;
-    if (@available(iOS 14.0, *)) {
-        _writer.delegate = self;
-    } else {
-        // Fallback on earlier versions
-    }
 }
 
 - (void)setAudioWriterInput {
@@ -189,12 +184,12 @@ static int kVideoTimeScale = 1000;
 #pragma mark LocalProcessAudioFrameDelegate & LocalProcessVideoFrameDelegate
 - (void)onCallbackLocalAudioFrame:(LocalAudioFrame*)audioFrame {
     _audioFrame = audioFrame;
-    [self writeLocalAudioFrame:audioFrame];
+//    [self writeLocalAudioFrame:audioFrame];
 }
 
 - (void)onCallbackLocalVideoFrame:(LocalVideoFrame *)localVideoFrame {
     _videoFrame = localVideoFrame;
-//    [self writeLocalVideoFrame:localVideoFrame];
+    [self writeLocalVideoFrame:localVideoFrame];
 }
 
 #pragma mark video write
@@ -300,7 +295,7 @@ static int kVideoTimeScale = 1000;
     AudioBufferList audioBufferList;
 
     audioBufferList.mNumberBuffers = 1;
-    audioBufferList.mBuffers[0].mNumberChannels = 1;
+    audioBufferList.mBuffers[0].mNumberChannels = audioFormat.mChannelsPerFrame;
     audioBufferList.mBuffers[0].mDataByteSize = (UInt32)[audioData length];
     audioBufferList.mBuffers[0].mData = (void *)[audioData bytes];
 
@@ -339,16 +334,6 @@ static int kVideoTimeScale = 1000;
     CFRelease(blockBuffer);
     CFRelease(formatDesc);
     return sampleBuffer;
-}
-
-
-#pragma mark dele
-- (void)assetWriter:(AVAssetWriter *)writer didOutputSegmentData:(NSData *)segmentData segmentType:(AVAssetSegmentType)segmentType segmentReport:(nullable AVAssetSegmentReport *)segmentReport {
-    
-}
-
-- (void)assetWriter:(AVAssetWriter *)writer didOutputSegmentData:(NSData *)segmentData segmentType:(AVAssetSegmentType)segmentType {
-    
 }
 
 @end
