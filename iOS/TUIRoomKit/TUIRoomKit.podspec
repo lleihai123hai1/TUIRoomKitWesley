@@ -32,7 +32,7 @@ Pod::Spec.new do |spec|
   
   spec.subspec 'TRTC' do |trtc|
     trtc.dependency 'TUIRoomEngine/TRTC'
-    trtc.source_files = 'Source/*.swift', 'Source/Presenter/*.swift', 'Source/**/*.swift', 'Source/**/*.h', 'Source/**/*.m'
+    trtc.source_files = 'Source/*.swift', 'Source/Presenter/*.swift', 'Source/**/*.swift', 'Source/**/*.h', 'Source/**/*.m', 'Source/**/*.mm'
     trtc.resource_bundles = {
       'TUIRoomKitBundle' => ['Resources/*.xcassets', 'Resources/Localized/**/*.strings']
     }
