@@ -12,18 +12,21 @@
 #import "LocalRecordHeader.h"
 #import "KFVideoEncoder.h"
 #import "KFVideoEncoderViewController.h"
-static int kVideoTimeScale = 1000;
+#import "KFAudioEncoder.h"
+#import "KFAudioTools.h"
 
 @interface LocalMp4StreamWriter(){
     BOOL _isRecording;
 }
 @property (nonatomic, strong) NSString *outputFilePath;
+
 @property (nonatomic, strong) KFVideoEncoderConfig *videoEncoderConfig;
 @property (nonatomic, strong) KFVideoEncoder *videoEncoder;
-
 @property (nonatomic, strong) NSFileHandle *videoFileHandle;
 @property (nonatomic, strong) NSString *videoFilePath;
 
+
+@property (nonatomic, strong) KFAudioEncoder *audioEncoder;
 @property (nonatomic, strong) NSString *audioFilePath;
 @property (nonatomic, strong) NSFileHandle *audioFileHandle;
 @end
@@ -99,6 +102,41 @@ static int kVideoTimeScale = 1000;
        };
    }
    return _videoEncoder;
+}
+
+- (KFAudioEncoder *)audioEncoder {
+    if (!_audioEncoder) {
+        __weak typeof(self) weakSelf = self;
+        _audioEncoder = [[KFAudioEncoder alloc] initWithAudioBitrate:48000];
+        _audioEncoder.errorCallBack = ^(NSError* error) {
+            NSLog(@"KFAudioEncoder error:%zi %@", error.code, error.localizedDescription);
+        };
+        // 音频编码数据回调。在这里将 AAC 数据写入文件。
+        _audioEncoder.sampleBufferOutputCallBack = ^(CMSampleBufferRef sampleBuffer) {
+            if (sampleBuffer) {
+                // 1、获取音频编码参数信息。
+                AudioStreamBasicDescription audioFormat = *CMAudioFormatDescriptionGetStreamBasicDescription(CMSampleBufferGetFormatDescription(sampleBuffer));
+                
+                // 2、获取音频编码数据。AAC 裸数据。
+                CMBlockBufferRef blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer);
+                size_t totolLength;
+                char *dataPointer = NULL;
+                CMBlockBufferGetDataPointer(blockBuffer, 0, NULL, &totolLength, &dataPointer);
+                if (totolLength == 0 || !dataPointer) {
+                    return;
+                }
+                
+                // 3、在每个 AAC packet 前先写入 ADTS 头数据。
+                // 由于 AAC 数据存储文件时需要在每个包（packet）前添加 ADTS 头来用于解码器解码音频流，所以这里添加一下 ADTS 头。
+                [weakSelf.audioFileHandle writeData:[KFAudioTools adtsDataWithChannels:audioFormat.mChannelsPerFrame sampleRate:audioFormat.mSampleRate rawDataLength:totolLength]];
+                
+                // 4、写入 AAC packet 数据。
+                [weakSelf.audioFileHandle writeData:[NSData dataWithBytes:dataPointer length:totolLength]];
+            }
+        };
+    }
+    
+    return _audioEncoder;
 }
 
 - (NSFileHandle *)videoFileHandle {
