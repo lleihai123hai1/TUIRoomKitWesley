@@ -10,7 +10,7 @@
 #import "KFAudioCapture.h"
 //参考链接：https://zhuanlan.zhihu.com/p/514346313
 //用工具播放 PCM 文件
-//ffplay -ar 44100 -channels 2 -f s16le -i test.pcm
+//ffplay -ar 48000 -channels 2 -f s16le -i test.pcm
 @interface KFAudioCaptureViewController ()
 @property (nonatomic, strong) KFAudioConfig *audioConfig;
 @property (nonatomic, strong) KFAudioCapture *audioCapture;
