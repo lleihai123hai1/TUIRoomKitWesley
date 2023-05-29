@@ -15,6 +15,8 @@
 #import "KFAudioEncoder.h"
 #import "KFAudioTools.h"
 
+static int kVideoTimeScale = 1000;
+
 @interface LocalMp4StreamWriter(){
     BOOL _isRecording;
 }
@@ -216,7 +218,10 @@
 #pragma mark LocalProcessAudioFrameDelegate & LocalProcessVideoFrameDelegate
 - (void)onCallbackLocalAudioFrame:(LocalAudioFrame*)localAudioFrame {
     if (_isRecording) {
-        [self.audioFileHandle writeData:localAudioFrame.audioFrame.data];
+        CMSampleBufferRef audioSample = [self sampleBufferFromAudioData:localAudioFrame];
+        [self.audioEncoder encodeSampleBuffer:audioSample];
+        CFRelease(audioSample);
+//        [self.audioFileHandle writeData:localAudioFrame.audioFrame.data];
     }
 }
 
@@ -225,6 +230,165 @@
         [self.videoEncoder encodePixelBuffer:localVideoFrame.videoFrame.pixelBuffer ptsTime:kCMTimePositiveInfinity];
     }
 }
+
+
+#pragma mark audio
+
+- (CMSampleBufferRef)sampleBufferFromAudioData:(LocalAudioFrame *)frame {
+
+    AudioStreamBasicDescription audioFormat;
+    audioFormat.mSampleRate = frame.audioFrame.sampleRate;
+    audioFormat.mFormatID = kAudioFormatLinearPCM;
+    audioFormat.mFormatFlags = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
+    audioFormat.mFramesPerPacket = 1;
+    audioFormat.mChannelsPerFrame = 1;
+    audioFormat.mBytesPerFrame = 2;
+    audioFormat.mBytesPerPacket = 2;
+    audioFormat.mBitsPerChannel = 16;
+    audioFormat.mReserved = 0;
+
+    CMFormatDescriptionRef formatDesc = NULL;
+    OSStatus status = CMAudioFormatDescriptionCreate(kCFAllocatorDefault,
+                                                      &audioFormat,
+                                                      0,
+                                                      NULL,
+                                                      0,
+                                                      NULL,
+                                                      NULL,
+                                                      &formatDesc);
+    if (status != noErr) {
+        NSLog(@"Failed to create audio format description");
+        return nil;
+    }
+
+    CMSampleBufferRef sampleBuffer = NULL;
+    CMBlockBufferRef blockBuffer = NULL;
+    AudioBufferList audioBufferList;
+
+    audioBufferList.mNumberBuffers = 1;
+    audioBufferList.mBuffers[0].mNumberChannels = audioFormat.mChannelsPerFrame;
+    audioBufferList.mBuffers[0].mDataByteSize = (UInt32)[frame.audioFrame.data length];
+    audioBufferList.mBuffers[0].mData = (void *)[frame.audioFrame.data bytes];
+
+    status = CMBlockBufferCreateWithMemoryBlock(kCFAllocatorDefault,
+                                                (void *)audioBufferList.mBuffers[0].mData,
+                                                audioBufferList.mBuffers[0].mDataByteSize,
+                                                kCFAllocatorNull,
+                                                NULL,
+                                                0,
+                                                audioBufferList.mBuffers[0].mDataByteSize,
+                                                0,
+                                                &blockBuffer);
+    if (status != noErr) {
+        NSLog(@"Failed to create block buffer");
+        return nil;
+    }
+
+    size_t sampleSize[1] = {(size_t)frame.audioFrame.data.length};
+    CMSampleTimingInfo timingInfo;
+    timingInfo.presentationTimeStamp = CMTimeMake(frame.audioFrame.timestamp, kVideoTimeScale);
+    // DTS MUST NOT always be 0, otherwise error -16364 will be encountered
+    timingInfo.decodeTimeStamp = CMTimeMake(frame.audioFrame.timestamp, kVideoTimeScale);
+    timingInfo.duration = CMTimeMake(50, kVideoTimeScale);
+
+    status = CMSampleBufferCreate(kCFAllocatorDefault,
+                                  blockBuffer,
+                                  true,
+                                  NULL,
+                                  NULL,
+                                  formatDesc,
+                                  1,
+                                  1,
+                                  &timingInfo,
+                                  1,
+                                  sampleSize,
+                                  &sampleBuffer);
+    
+    
+    if (status != noErr) {
+        NSLog(@"Failed to create sample buffer");
+        return nil;
+    }
+
+    CFRelease(blockBuffer);
+    CFRelease(formatDesc);
+    return sampleBuffer;
+}
+//
+//
+//// NSData转换为CMSampleBufferRef
+//- (CMSampleBufferRef)sampleBufferFromAudioData:(NSData *)audioData sampleRate:(Float64)sampleRate {
+//
+//    AudioStreamBasicDescription audioFormat;
+//    audioFormat.mSampleRate = sampleRate;
+//    audioFormat.mFormatID = kAudioFormatLinearPCM;
+//    audioFormat.mFormatFlags = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
+//    audioFormat.mFramesPerPacket = 1;
+//    audioFormat.mChannelsPerFrame = 1;
+//    audioFormat.mBytesPerFrame = 2;
+//    audioFormat.mBytesPerPacket = 2;
+//    audioFormat.mBitsPerChannel = 16;
+//    audioFormat.mReserved = 0;
+//
+//    CMFormatDescriptionRef formatDesc = NULL;
+//    OSStatus status = CMAudioFormatDescriptionCreate(kCFAllocatorDefault,
+//                                                      &audioFormat,
+//                                                      0,
+//                                                      NULL,
+//                                                      0,
+//                                                      NULL,
+//                                                      NULL,
+//                                                      &formatDesc);
+//    if (status != noErr) {
+//        NSLog(@"Failed to create audio format description");
+//        return nil;
+//    }
+//
+//    CMSampleBufferRef sampleBuffer = NULL;
+//    CMBlockBufferRef blockBuffer = NULL;
+//    AudioBufferList audioBufferList;
+//
+//    audioBufferList.mNumberBuffers = 1;
+//    audioBufferList.mBuffers[0].mNumberChannels = 1;
+//    audioBufferList.mBuffers[0].mDataByteSize = (UInt32)[audioData length];
+//    audioBufferList.mBuffers[0].mData = (void *)[audioData bytes];
+//
+//    status = CMBlockBufferCreateWithMemoryBlock(kCFAllocatorDefault,
+//                                                (void *)audioBufferList.mBuffers[0].mData,
+//                                                audioBufferList.mBuffers[0].mDataByteSize,
+//                                                kCFAllocatorNull,
+//                                                NULL,
+//                                                0,
+//                                                audioBufferList.mBuffers[0].mDataByteSize,
+//                                                0,
+//                                                &blockBuffer);
+//    if (status != noErr) {
+//        NSLog(@"Failed to create block buffer");
+//        return nil;
+//    }
+//
+//    CMSampleTimingInfo timing = {kCMTimeInvalid, kCMTimeInvalid, kCMTimeInvalid};
+//    status = CMSampleBufferCreate(kCFAllocatorDefault,
+//                                  blockBuffer,
+//                                  true,
+//                                  NULL,
+//                                  NULL,
+//                                  formatDesc,
+//                                  (CMItemCount)1,
+//                                  (CMItemCount)0,
+//                                  &timing,
+//                                  1,
+//                                  &audioBufferList,
+//                                  &sampleBuffer);
+//    if (status != noErr) {
+//        NSLog(@"Failed to create sample buffer");
+//        return nil;
+//    }
+//
+//    CFRelease(blockBuffer);
+//    CFRelease(formatDesc);
+//    return sampleBuffer;
+//}
 
 #pragma mark video
 
