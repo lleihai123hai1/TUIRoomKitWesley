@@ -11,7 +11,7 @@
 #if TXLiteAVSDK_TRTC
     #import <TXLiteAVSDK_TRTC/TRTCCloud.h>
 #else
-    #import <TXLiteAVSDK_Professional/TRTCCloud.h>
+//    #import <TXLiteAVSDK_Professional/TRTCCloud.h>
 #endif
 
 #define TUILOCK(lock) dispatch_semaphore_wait(lock, DISPATCH_TIME_FOREVER);
