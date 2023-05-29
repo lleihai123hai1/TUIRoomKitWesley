@@ -78,7 +78,8 @@
 }
 
 - (void)unsubscribeDelegateCallback {
-    [TRTCCloud sharedInstance].delegate = nil;
+    [[TRTCCloud sharedInstance] setLocalVideoRenderDelegate:nil pixelFormat:TRTCVideoPixelFormat_I420 bufferType:TRTCVideoBufferType_PixelBuffer];
+    [[TRTCCloud sharedInstance] setAudioFrameDelegate:nil];
     _videoFrame.delegate = nil;
     _audioFrame.delegate = nil;
     [[LocalVideoManager sharedInstance] unbind];
