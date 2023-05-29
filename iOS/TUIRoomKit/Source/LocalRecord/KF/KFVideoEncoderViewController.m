@@ -14,11 +14,7 @@
 //ffplay -i test.h264
 //ffplay -i test.h265
 
-@interface KFVideoPacketExtraData : NSObject
-@property (nonatomic, strong) NSData *sps;
-@property (nonatomic, strong) NSData *pps;
-@property (nonatomic, strong) NSData *vps;
-@end
+
 
 @implementation KFVideoPacketExtraData
 @end
