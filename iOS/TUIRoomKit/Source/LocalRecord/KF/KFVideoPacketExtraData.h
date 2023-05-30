@@ -1,11 +1,11 @@
 //
-//  KFVideoEncoderViewController.h
+//  KFVideoPacketExtraData.h
 //  TUIRoomKit
 //
-//  Created by WesleyLei on 2023/5/29.
+//  Created by WesleyLei on 2023/5/30.
 //
 
-#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -13,10 +13,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) NSData *sps;
 @property (nonatomic, strong) NSData *pps;
 @property (nonatomic, strong) NSData *vps;
-@end
-
-@interface KFVideoEncoderViewController : UIViewController
-
 @end
 
 NS_ASSUME_NONNULL_END
