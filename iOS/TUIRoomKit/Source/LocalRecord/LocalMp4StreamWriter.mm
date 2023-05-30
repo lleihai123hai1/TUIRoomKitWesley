@@ -11,12 +11,22 @@
 #include <Foundation/Foundation.h>
 #import "LocalRecordHeader.h"
 #import "KFVideoEncoder.h"
-#import "KFVideoEncoderViewController.h"
 #import "KFAudioEncoder.h"
 #import "KFAudioTools.h"
+#import "KFVideoPacketExtraData.h"
 
 static int kVideoTimeScale = 1000;
 static size_t kAACSamplesPerChannelPerFrame = 1024;
+
+//参考链接：https://zhuanlan.zhihu.com/p/515281023
+//用工具播放 H.264/H.265 文件
+//ffplay -i test.h264
+//ffplay -i test.h265
+
+//参考链接：https://zhuanlan.zhihu.com/p/514346313
+//用工具播放 PCM 文件
+//ffplay -ar 48000 -channels 2 -f s16le -i test.pcm
+
 
 @interface LocalMp4StreamWriter(){
     BOOL _isRecording;
