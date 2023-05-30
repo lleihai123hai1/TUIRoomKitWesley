@@ -16,6 +16,7 @@
 #import "KFAudioTools.h"
 
 static int kVideoTimeScale = 1000;
+static size_t kAACSamplesPerChannelPerFrame = 1024;
 
 @interface LocalMp4StreamWriter(){
     BOOL _isRecording;
@@ -288,8 +289,8 @@ static int kVideoTimeScale = 1000;
     CMSampleTimingInfo timingInfo;
     timingInfo.presentationTimeStamp = CMTimeMake(frame.audioFrame.timestamp, kVideoTimeScale);
     // DTS MUST NOT always be 0, otherwise error -16364 will be encountered
-    timingInfo.decodeTimeStamp = CMTimeMake(frame.audioFrame.timestamp, kVideoTimeScale);
-    timingInfo.duration = CMTimeMake(50, kVideoTimeScale);
+    timingInfo.decodeTimeStamp = timingInfo.decodeTimeStamp;
+    timingInfo.duration = CMTimeMake(kAACSamplesPerChannelPerFrame, (int32_t)frame.audioFrame.sampleRate);
 
     status = CMSampleBufferCreate(kCFAllocatorDefault,
                                   blockBuffer,
