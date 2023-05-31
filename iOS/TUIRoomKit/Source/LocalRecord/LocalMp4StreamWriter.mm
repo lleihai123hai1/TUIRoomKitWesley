@@ -174,13 +174,9 @@ static int kVideoTimeScale = 1000;
 
 - (AVAssetWriterInput *)audioWriterInput {
     if (!_audioWriterInput) {
-        NSDictionary *audioSetting = @{AVFormatIDKey : @(kAudioFormatLinearPCM),
-                                       AVLinearPCMBitDepthKey : @(16),
-                                            AVLinearPCMIsFloatKey : @(NO),
-                                            AVLinearPCMIsBigEndianKey : @(NO),
-                                            AVLinearPCMIsNonInterleaved : @(NO),
-                                            AVNumberOfChannelsKey : @([KFAudioConfig defaultConfig].channels),
-                                            AVSampleRateKey : @([KFAudioConfig defaultConfig].sampleRate) };
+        NSDictionary *audioSetting = @{AVFormatIDKey : @(kAudioFormatMPEG4AAC),
+                                       AVNumberOfChannelsKey : @([KFAudioConfig defaultConfig].channels),
+                                       AVSampleRateKey : @([KFAudioConfig defaultConfig].sampleRate) };
         _audioWriterInput =  [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeAudio outputSettings:audioSetting];
     }
     return _audioWriterInput;
