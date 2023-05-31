@@ -27,6 +27,9 @@
 //用工具播放 PCM 文件
 //ffplay -ar 48000 -channels 1 -f s16le -i audio_tmp.pcm
 
+//ffmpeg -i video_tmp.h265 -i audio_tmp.acc -vcodec copy -f mp4 test.mp4
+
+
 
 @interface LocalMp4StreamWriter(){
     BOOL _isRecording;
