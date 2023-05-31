@@ -15,7 +15,7 @@
 #import "KFAudioTools.h"
 #import "KFVideoPacketExtraData.h"
 #import "LocalRecordTools.h"
-
+#import "KFAudioConfig.h"
 
 static int kVideoTimeScale = 1000;
 //参考链接：https://zhuanlan.zhihu.com/p/515281023
@@ -51,6 +51,7 @@ static int kVideoTimeScale = 1000;
 
 @property (nonatomic, strong) AVAssetWriter *writer;
 @property (nonatomic, strong) AVAssetWriterInput *videoWriterInput;
+@property (nonatomic, strong) AVAssetWriterInput *audioWriterInput;
 @end
 
 @implementation LocalMp4StreamWriter
@@ -114,6 +115,7 @@ static int kVideoTimeScale = 1000;
         _audioPcmFileHandle = nil;
     }
     _videoWriterInput = nil;
+    _audioWriterInput = nil;
     _writer = nil;
 }
 
@@ -121,6 +123,9 @@ static int kVideoTimeScale = 1000;
 - (void)startWriting {
     if ([self.writer canAddInput:self.videoWriterInput]) {
         [self.writer addInput:self.videoWriterInput];
+    }
+    if ([self.writer canAddInput:self.audioWriterInput]) {
+        [self.writer addInput:self.audioWriterInput];
     }
     [self.writer startWriting];
     [self.writer startSessionAtSourceTime:kCMTimeZero];
@@ -167,6 +172,20 @@ static int kVideoTimeScale = 1000;
     return _videoWriterInput;
 }
 
+- (AVAssetWriterInput *)audioWriterInput {
+    if (!_audioWriterInput) {
+        NSDictionary *audioSetting = @{AVFormatIDKey : @(kAudioFormatLinearPCM),
+                                       AVLinearPCMBitDepthKey : @(16),
+                                            AVLinearPCMIsFloatKey : @(NO),
+                                            AVLinearPCMIsBigEndianKey : @(NO),
+                                            AVLinearPCMIsNonInterleaved : @(NO),
+                                            AVNumberOfChannelsKey : @([KFAudioConfig defaultConfig].channels),
+                                            AVSampleRateKey : @([KFAudioConfig defaultConfig].sampleRate) };
+        _audioWriterInput =  [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeAudio outputSettings:audioSetting];
+    }
+    return _audioWriterInput;
+}
+
 -(KFVideoEncoderConfig *)videoEncoderConfig {
    if (!_videoEncoderConfig) {
        _videoEncoderConfig = [[KFVideoEncoderConfig alloc] init];
@@ -196,7 +215,7 @@ static int kVideoTimeScale = 1000;
 - (KFAudioEncoder *)audioEncoder {
     if (!_audioEncoder) {
         __weak typeof(self) weakSelf = self;
-        _audioEncoder = [[KFAudioEncoder alloc] initWithAudioBitrate:48000];
+        _audioEncoder = [[KFAudioEncoder alloc] initWithAudioBitrate:[KFAudioConfig defaultConfig].sampleRate];
         _audioEncoder.errorCallBack = ^(NSError* error) {
             NSLog(@"KFAudioEncoder error:%zi %@", error.code, error.localizedDescription);
         };
@@ -344,6 +363,8 @@ static int kVideoTimeScale = 1000;
         [self.videoEncoder encodePixelBuffer:localVideoFrame.videoFrame.pixelBuffer ptsTime:kCMTimePositiveInfinity];
     }
 }
+
+#pragma mark _videoWriterInput
 
 #pragma mark _videoWriterInput
 - (void)appendSampleBuffer:(CMSampleBufferRef)videoSample {
