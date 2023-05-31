@@ -152,7 +152,7 @@ static int kVideoTimeScale = 1000;
 
 - (AVAssetWriterInput *)videoWriterInput {
     if (!_videoWriterInput) {
-        CGSize size =  self.videoEncoderConfig.size;
+        CGSize size =  CGSizeMake(536,960);
         NSInteger bitsPerSecond = self.videoEncoderConfig.bitrate;
         NSDictionary * writerOutputSettings =@{
             AVVideoCodecKey : AVVideoCodecTypeH264,
