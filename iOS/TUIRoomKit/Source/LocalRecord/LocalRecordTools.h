@@ -18,6 +18,8 @@ NS_ASSUME_NONNULL_BEGIN
 + (CMSampleBufferRef)sampleBufferFromAudioData:(LocalAudioFrame *)frame;
     
 + (NSMutableData *)changeSampleBufferToData:(CMSampleBufferRef)sampleBuffer;
+
++ (CMSampleBufferRef)createSampleBufferFromPixelBuffer:(CVPixelBufferRef)pixelBuffer time:(CMTime)time;
 @end
 
 NS_ASSUME_NONNULL_END

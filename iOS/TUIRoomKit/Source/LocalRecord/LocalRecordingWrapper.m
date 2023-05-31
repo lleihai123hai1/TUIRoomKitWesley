@@ -63,7 +63,7 @@
 }
 
 - (void)subscribeDelegateCallback {
-    [[TRTCCloud sharedInstance] setLocalVideoRenderDelegate:self pixelFormat:TRTCVideoPixelFormat_I420 bufferType:TRTCVideoBufferType_PixelBuffer];
+    [[TRTCCloud sharedInstance] setLocalVideoRenderDelegate:self pixelFormat:TRTCVideoPixelFormat_NV12 bufferType:TRTCVideoBufferType_PixelBuffer];
     [[TRTCCloud sharedInstance] setAudioFrameDelegate:self];
     TRTCAudioFrameDelegateFormat *format = [[TRTCAudioFrameDelegateFormat alloc]init];
     format.channels = 1;
