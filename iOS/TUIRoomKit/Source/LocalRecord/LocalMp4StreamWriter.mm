@@ -17,7 +17,7 @@
 #import "LocalRecordTools.h"
 
 
-
+static int kVideoTimeScale = 1000;
 //参考链接：https://zhuanlan.zhihu.com/p/515281023
 //用工具播放 H.264/H.265 文件
 //ffplay -i video_tmp.h264
@@ -48,6 +48,9 @@
 
 @property (nonatomic, strong) NSString *audioPcmFilePath;
 @property (nonatomic, strong) NSFileHandle *audioPcmFileHandle;
+
+@property (nonatomic, strong) AVAssetWriter *writer;
+@property (nonatomic, strong) AVAssetWriterInput *videoWriterInput;
 @end
 
 @implementation LocalMp4StreamWriter
@@ -86,11 +89,13 @@
     }
     [self clearTmpFile];
     [self clearData];
+    [self startWriting];
     _isRecording = YES;
 }
 
 - (void)stopRecording {
     _isRecording = NO;
+    [self stopWriting];
     [self clearData];
 }
 
@@ -108,9 +113,59 @@
         [_audioPcmFileHandle closeFile];
         _audioPcmFileHandle = nil;
     }
+    _videoWriterInput = nil;
+    _writer = nil;
 }
 
+
+- (void)startWriting {
+    if ([self.writer canAddInput:self.videoWriterInput]) {
+        [self.writer addInput:self.videoWriterInput];
+    }
+    [self.writer startWriting];
+    [self.writer startSessionAtSourceTime:kCMTimeZero];
+}
+
+- (void)stopWriting {
+    [_writer finishWritingWithCompletionHandler:^{
+        NSLog(@"finishWritingWithCompletionHandler");
+    }];
+}
 #pragma mark get/set
+
+- (AVAssetWriter *)writer {
+    if (!_writer) {
+        NSError *error = nil;
+        NSURL *fileUrl = [NSURL fileURLWithPath:self.outputFilePath];
+        // 根据文件名扩展类型，确定具体容器格式
+        AVFileType mediaFileType = AVFileTypeMPEG4;
+        _writer = [[AVAssetWriter alloc] initWithURL:fileUrl fileType:mediaFileType error:&error];
+        _writer.shouldOptimizeForNetworkUse = YES;
+    }
+    return _writer;
+}
+
+- (AVAssetWriterInput *)videoWriterInput {
+    if (!_videoWriterInput) {
+        CGSize size =  self.videoEncoderConfig.size;
+        NSInteger bitsPerSecond = self.videoEncoderConfig.bitrate;
+        NSDictionary * writerOutputSettings =@{
+            AVVideoCodecKey : AVVideoCodecTypeH264,
+            AVVideoWidthKey : @(size.width),
+            AVVideoHeightKey :@(size.height),
+            AVVideoCompressionPropertiesKey : @{
+                AVVideoMaxKeyFrameIntervalKey : @1,
+                AVVideoAverageBitRateKey : @(bitsPerSecond),
+                AVVideoProfileLevelKey : AVVideoProfileLevelH264Main31,
+            }
+        };
+        _videoWriterInput = [[AVAssetWriterInput alloc] initWithMediaType:AVMediaTypeVideo
+                                                   outputSettings: writerOutputSettings];
+        _videoWriterInput.expectsMediaDataInRealTime = YES;
+        _videoWriterInput.mediaTimeScale = kVideoTimeScale;
+    }
+    return _videoWriterInput;
+}
 
 -(KFVideoEncoderConfig *)videoEncoderConfig {
    if (!_videoEncoderConfig) {
@@ -125,6 +180,7 @@
        _videoEncoder = [[KFVideoEncoder alloc] initWithConfig:self.videoEncoderConfig];
        __weak typeof(self) weakSelf = self;
        _videoEncoder.sampleBufferOutputCallBack = ^(CMSampleBufferRef sampleBuffer) {
+           [weakSelf appendSampleBuffer:sampleBuffer];
            // 保存编码后的数据。
            NSMutableData *data = [LocalRecordTools changeSampleBufferToData:sampleBuffer];
            if (data) {
@@ -289,4 +345,18 @@
     }
 }
 
+#pragma mark _videoWriterInput
+- (void)appendSampleBuffer:(CMSampleBufferRef)videoSample {
+    if (!_isRecording) {
+        return;
+    }
+    if (_videoWriterInput.readyForMoreMediaData && _writer.status == AVAssetWriterStatusWriting && CMSampleBufferDataIsReady(videoSample)) {
+        if (videoSample != nil) {
+            BOOL appended = [_videoWriterInput appendSampleBuffer:videoSample];
+            NSLog(@"Write video: %@",(appended ? @"yes" : @"no"));
+        }
+    } else {
+        NSLog(@"MP4Writer:appendVideo not appended, status= %ld",(long)_writer.status);
+    }
+}
 @end
