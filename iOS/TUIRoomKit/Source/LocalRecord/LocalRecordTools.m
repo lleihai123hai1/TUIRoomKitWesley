@@ -230,4 +230,26 @@ static size_t kAACSamplesPerChannelPerFrame = 1024;
 }
 
 
++ (CMSampleBufferRef)createSampleBufferFromPixelBuffer:(CVPixelBufferRef)pixelBuffer
+                                                  time:(CMTime)time {
+  if (!pixelBuffer) {
+    return NULL;
+  }
+
+  CMVideoFormatDescriptionRef videoInfo = NULL;
+  CMVideoFormatDescriptionCreateForImageBuffer(NULL, pixelBuffer, &videoInfo);
+  if (!videoInfo) {
+    return NULL;
+  }
+
+  CMSampleTimingInfo timing = {CMTimeMake(1, time.timescale), time, kCMTimeInvalid};
+  CMSampleBufferRef sampleBuffer = NULL;
+  CVPixelBufferLockBaseAddress(pixelBuffer, 0);
+  CMSampleBufferCreateForImageBuffer(
+      kCFAllocatorDefault, pixelBuffer, YES, NULL, NULL, videoInfo, &timing, &sampleBuffer);
+  CVPixelBufferUnlockBaseAddress(pixelBuffer, 0);
+  CFRelease(videoInfo);
+  return sampleBuffer;
+}
+
 @end

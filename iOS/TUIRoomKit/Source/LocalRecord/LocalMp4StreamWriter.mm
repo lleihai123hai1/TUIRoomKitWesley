@@ -362,6 +362,9 @@ static int kVideoTimeScale = 1000;
 - (void)onCallbackLocalVideoFrame:(LocalVideoFrame *)localVideoFrame {
     if (_isRecording) {
         [self.videoEncoder encodePixelBuffer:localVideoFrame.videoFrame.pixelBuffer ptsTime:kCMTimePositiveInfinity];
+        CMSampleBufferRef videoSample = [LocalRecordTools createSampleBufferFromPixelBuffer:localVideoFrame.videoFrame.pixelBuffer time:CMTimeMake(localVideoFrame.videoFrame.timestamp, 1000)];
+        [self appendVideoSampleBuffer:videoSample];
+        CFRelease(videoSample);
     }
 }
 
