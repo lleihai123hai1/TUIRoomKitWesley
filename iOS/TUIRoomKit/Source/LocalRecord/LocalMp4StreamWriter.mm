@@ -199,7 +199,7 @@ static int kVideoTimeScale = 1000;
        _videoEncoder = [[KFVideoEncoder alloc] initWithConfig:self.videoEncoderConfig];
        __weak typeof(self) weakSelf = self;
        _videoEncoder.sampleBufferOutputCallBack = ^(CMSampleBufferRef sampleBuffer) {
-           [weakSelf appendSampleBuffer:sampleBuffer];
+//           [weakSelf appendVideoSampleBuffer:sampleBuffer];
            // 保存编码后的数据。
            NSMutableData *data = [LocalRecordTools changeSampleBufferToData:sampleBuffer];
            if (data) {
@@ -222,6 +222,7 @@ static int kVideoTimeScale = 1000;
         // 音频编码数据回调。在这里将 AAC 数据写入文件。
         _audioEncoder.sampleBufferOutputCallBack = ^(CMSampleBufferRef sampleBuffer) {
             if (sampleBuffer) {
+//                [weakSelf appendAudioSampleBuffer:sampleBuffer];
                 // 1、获取音频编码参数信息。
                 AudioStreamBasicDescription audioFormat = *CMAudioFormatDescriptionGetStreamBasicDescription(CMSampleBufferGetFormatDescription(sampleBuffer));
                 
@@ -366,8 +367,23 @@ static int kVideoTimeScale = 1000;
 
 #pragma mark _videoWriterInput
 
+- (void)appendAudioSampleBuffer:(CMSampleBufferRef)audioSample {
+    if (!_isRecording) {
+        return;
+    }
+    
+    if (_audioWriterInput.readyForMoreMediaData && _writer.status == AVAssetWriterStatusWriting && CMSampleBufferDataIsReady(audioSample)) {
+        if (audioSample != nil) {
+            BOOL appended = [_audioWriterInput appendSampleBuffer:audioSample];
+            NSLog(@"Write audio: %@",(appended ? @"yes" : @"no"));
+        }
+    } else {
+      NSLog(@"MP4Writer:appendAudio not appended, status= %ld",(long)_writer.status);
+    }
+}
+
 #pragma mark _videoWriterInput
-- (void)appendSampleBuffer:(CMSampleBufferRef)videoSample {
+- (void)appendVideoSampleBuffer:(CMSampleBufferRef)videoSample {
     if (!_isRecording) {
         return;
     }
