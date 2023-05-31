@@ -199,7 +199,6 @@ static int kVideoTimeScale = 1000;
        _videoEncoder = [[KFVideoEncoder alloc] initWithConfig:self.videoEncoderConfig];
        __weak typeof(self) weakSelf = self;
        _videoEncoder.sampleBufferOutputCallBack = ^(CMSampleBufferRef sampleBuffer) {
-//           [weakSelf appendVideoSampleBuffer:sampleBuffer];
            // 保存编码后的数据。
            NSMutableData *data = [LocalRecordTools changeSampleBufferToData:sampleBuffer];
            if (data) {
@@ -222,7 +221,6 @@ static int kVideoTimeScale = 1000;
         // 音频编码数据回调。在这里将 AAC 数据写入文件。
         _audioEncoder.sampleBufferOutputCallBack = ^(CMSampleBufferRef sampleBuffer) {
             if (sampleBuffer) {
-//                [weakSelf appendAudioSampleBuffer:sampleBuffer];
                 // 1、获取音频编码参数信息。
                 AudioStreamBasicDescription audioFormat = *CMAudioFormatDescriptionGetStreamBasicDescription(CMSampleBufferGetFormatDescription(sampleBuffer));
                 
@@ -354,6 +352,7 @@ static int kVideoTimeScale = 1000;
     if (_isRecording) {
         CMSampleBufferRef audioSample = [LocalRecordTools sampleBufferFromAudioData:localAudioFrame];
         [self.audioEncoder encodeSampleBuffer:audioSample];
+        [self appendAudioSampleBuffer:audioSample];
         CFRelease(audioSample);
         [self.audioPcmFileHandle writeData:localAudioFrame.audioFrame.data];
     }
@@ -362,7 +361,7 @@ static int kVideoTimeScale = 1000;
 - (void)onCallbackLocalVideoFrame:(LocalVideoFrame *)localVideoFrame {
     if (_isRecording) {
         [self.videoEncoder encodePixelBuffer:localVideoFrame.videoFrame.pixelBuffer ptsTime:kCMTimePositiveInfinity];
-        CMSampleBufferRef videoSample = [LocalRecordTools createSampleBufferFromPixelBuffer:localVideoFrame.videoFrame.pixelBuffer time:CMTimeMake(localVideoFrame.videoFrame.timestamp, 1000)];
+        CMSampleBufferRef videoSample = [LocalRecordTools createSampleBufferFromPixelBuffer:localVideoFrame.videoFrame.pixelBuffer time:CMTimeMake(localVideoFrame.videoFrame.timestamp, kVideoTimeScale)];
         [self appendVideoSampleBuffer:videoSample];
         CFRelease(videoSample);
     }
