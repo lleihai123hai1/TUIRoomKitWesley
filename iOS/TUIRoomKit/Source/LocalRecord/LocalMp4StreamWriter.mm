@@ -132,7 +132,9 @@ static int kVideoTimeScale = 1000;
 }
 
 - (void)stopWriting {
-    [_writer finishWritingWithCompletionHandler:^{
+    [self.audioWriterInput markAsFinished];
+    [self.videoWriterInput markAsFinished];
+    [self.writer finishWritingWithCompletionHandler:^{
         NSLog(@"finishWritingWithCompletionHandler");
     }];
 }
