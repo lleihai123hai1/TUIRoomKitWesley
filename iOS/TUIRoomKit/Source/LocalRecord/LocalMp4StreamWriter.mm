@@ -33,6 +33,7 @@ static int kVideoTimeScale = 1000;
 
 @interface LocalMp4StreamWriter(){
     BOOL _isRecording;
+    uint64_t _startedSession;
 }
 @property (nonatomic, strong) NSString *outputFilePath;
 
@@ -117,6 +118,7 @@ static int kVideoTimeScale = 1000;
     _videoWriterInput = nil;
     _audioWriterInput = nil;
     _writer = nil;
+    _startedSession = NO;
 }
 
 
@@ -128,7 +130,6 @@ static int kVideoTimeScale = 1000;
         [self.writer addInput:self.audioWriterInput];
     }
     [self.writer startWriting];
-    [self.writer startSessionAtSourceTime:kCMTimeZero];
 }
 
 - (void)stopWriting {
@@ -348,6 +349,10 @@ static int kVideoTimeScale = 1000;
 #pragma mark LocalProcessAudioFrameDelegate & LocalProcessVideoFrameDelegate
 - (void)onCallbackLocalAudioFrame:(LocalAudioFrame*)localAudioFrame {
     if (_isRecording) {
+        if (!_startedSession) {
+            _startedSession = YES;;
+            [self.writer startSessionAtSourceTime:CMTimeMake(localAudioFrame.audioFrame.timestamp, kVideoTimeScale)];
+        }
         CMSampleBufferRef audioSample = [LocalRecordTools sampleBufferFromAudioData:localAudioFrame];
         [self.audioEncoder encodeSampleBuffer:audioSample];
         [self appendAudioSampleBuffer:audioSample];
@@ -359,6 +364,10 @@ static int kVideoTimeScale = 1000;
 - (void)onCallbackLocalVideoFrame:(LocalVideoFrame *)localVideoFrame {
     if (_isRecording) {
         [self.videoEncoder encodePixelBuffer:localVideoFrame.videoFrame.pixelBuffer ptsTime:kCMTimePositiveInfinity];
+        if (!_startedSession) {
+            _startedSession = YES;;
+            [self.writer startSessionAtSourceTime:CMTimeMake(localVideoFrame.videoFrame.timestamp, kVideoTimeScale)];
+        }
         CMSampleBufferRef videoSample = [LocalRecordTools createSampleBufferFromPixelBuffer:localVideoFrame.videoFrame.pixelBuffer time:CMTimeMake(localVideoFrame.videoFrame.timestamp, kVideoTimeScale)];
         [self appendVideoSampleBuffer:videoSample];
         CFRelease(videoSample);
