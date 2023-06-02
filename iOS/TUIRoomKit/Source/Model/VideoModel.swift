@@ -15,16 +15,16 @@ import TXLiteAVSDK_Professional
 #endif
 
 class VideoModel {
-    var videoFps: Int = 15
-    var videoResolution: TRTCVideoResolution = ._960_540
-    var videoBitrate: Int = 900
+    var videoFps: Int = 30
+    var videoResolution: TRTCVideoResolution = ._1920_1080
+    var videoBitrate: Int = 3000
     var isMirror: Bool = false
     var isFrontCamera: Bool = true
-    var videoQuality: TUIVideoQuality = .quality540P
-    var bitrate: BitrateTableData = BitrateTableData(resolutionName: "540 * 960",
-                                                     resolution: TRTCVideoResolution._960_540,
-                                                     defaultBitrate: 900,
-                                                     minBitrate: 400,
-                                                     maxBitrate: 1_600,
+    var videoQuality: TUIVideoQuality = .quality1080P
+    var bitrate: BitrateTableData = BitrateTableData(resolutionName: "1080 * 1920",
+                                                     resolution: TRTCVideoResolution._1920_1080,
+                                                     defaultBitrate: 3_000,
+                                                     minBitrate: 2_000,
+                                                     maxBitrate: 4_000,
                                                      stepBitrate: 50)
 }
