@@ -6,7 +6,7 @@
 //
 
 #import "LocalProcessAudioFrame.h"
-
+#import "LocalRecordHeader.h"
 
 @interface LocalAudioFrame(){
     TRTCAudioFrame *_audioFrame;
@@ -18,7 +18,11 @@
 
 - (instancetype)init:(TRTCAudioFrame *)audioFrame {
     if (self = [super init]) {
-        _audioFrame = audioFrame;
+        _audioFrame = [[TRTCAudioFrame alloc] init];
+        _audioFrame.channels = audioFrame.channels;
+        _audioFrame.sampleRate = audioFrame.sampleRate;
+        _audioFrame.timestamp = audioFrame.timestamp;
+        _audioFrame.data = [NSData dataWithData:audioFrame.data];
     }
     return self;
 }
