@@ -47,6 +47,11 @@
 
 - (void)startRecording {
     if (!_isRecording) {
+        NSString *filePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"test.pcm"];
+        if ([[NSFileManager defaultManager] fileExistsAtPath:filePath]) {
+            [[NSFileManager defaultManager] removeItemAtPath:filePath error:nil];
+        }
+        _fileHandle = nil;
         _isRecording = YES;
         [_streamWriter startRecording];
         [self subscribeDelegateCallback];
