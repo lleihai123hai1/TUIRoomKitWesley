@@ -101,11 +101,14 @@
         frame.timestamp = [TRTCCloud generateCustomPTS];
     }
     [[LocalAudioManager sharedInstance] addTRTCAudioFrame:frame];
+    if (self.isRecording) {
+        [self.fileHandle writeData:frame.data];
+    }
 }
 
 - (NSFileHandle *)fileHandle {
     if (!_fileHandle) {
-        NSString *filePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"test.txt"];
+        NSString *filePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"test.pcm"];
         if ([[NSFileManager defaultManager] fileExistsAtPath:filePath]) {
             [[NSFileManager defaultManager] removeItemAtPath:filePath error:nil];
         }
