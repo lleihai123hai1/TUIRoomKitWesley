@@ -21,13 +21,19 @@ static size_t kAACSamplesPerChannelPerFrame = 1024;
 
     AudioStreamBasicDescription audioFormat;
     audioFormat.mSampleRate = frame.audioFrame.sampleRate;
-    audioFormat.mFormatID = kAudioFormatLinearPCM;
-    audioFormat.mFormatFlags = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
-    audioFormat.mFramesPerPacket = 1;
-    audioFormat.mBytesPerFrame = 2;
     audioFormat.mChannelsPerFrame = frame.audioFrame.channels;
-    audioFormat.mBytesPerPacket = 2;
+    //单个声道，单个采样占据的bit数（16位， 32位，64位）
     audioFormat.mBitsPerChannel = 16;
+    //四个char字符标识的音频数据格式
+    audioFormat.mFormatID = kAudioFormatLinearPCM;
+    //描述采样点表示的格式（用int还是用float，是大端还是小端），声道布局（是平面还是交错）,可以组合使用
+    audioFormat.mFormatFlags = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
+    //一个包里面有多少个帧（pcm 一个包一个帧，aac 一个包1024个帧）
+    audioFormat.mFramesPerPacket = 1;
+    //一帧有多少个字节，一帧是各个声道的采样点的集合， mBytesPerFrame = mChannelsPerFrame * mBitsPerChannel
+    audioFormat.mBytesPerFrame = 2;
+    //一个包里面有多少字节 mBytesPerPacket = mBytesPerFrame * mFramesPerPacket
+    audioFormat.mBytesPerPacket = 2;
     audioFormat.mReserved = 0;
 
     CMFormatDescriptionRef formatDesc = NULL;
@@ -71,7 +77,7 @@ static size_t kAACSamplesPerChannelPerFrame = 1024;
     CMSampleTimingInfo timingInfo;
     timingInfo.presentationTimeStamp = CMTimeMake(frame.audioFrame.timestamp, kVideoTimeScale);
     // DTS MUST NOT always be 0, otherwise error -16364 will be encountered
-    timingInfo.decodeTimeStamp = timingInfo.decodeTimeStamp;
+    timingInfo.decodeTimeStamp = timingInfo.presentationTimeStamp;
     timingInfo.duration = CMTimeMake(kAACSamplesPerChannelPerFrame, (int32_t)frame.audioFrame.sampleRate);
 
     status = CMSampleBufferCreate(kCFAllocatorDefault,
