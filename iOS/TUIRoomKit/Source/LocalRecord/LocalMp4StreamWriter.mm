@@ -162,9 +162,9 @@ static int kVideoTimeScale = 1000;
             AVVideoWidthKey : @(size.width),
             AVVideoHeightKey :@(size.height),
             AVVideoCompressionPropertiesKey : @{
-                AVVideoMaxKeyFrameIntervalKey : @1,
+                AVVideoMaxKeyFrameIntervalKey : @3,
                 AVVideoAverageBitRateKey : @(bitsPerSecond),
-                AVVideoProfileLevelKey : AVVideoProfileLevelH264Main41,
+                AVVideoProfileLevelKey : AVVideoProfileLevelH264HighAutoLevel,
             }
         };
         _videoWriterInput = [[AVAssetWriterInput alloc] initWithMediaType:AVMediaTypeVideo
