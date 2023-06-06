@@ -18,6 +18,7 @@
     LocalMp4StreamWriter *_streamWriter;
     LocalProcessVideoFrame *_videoFrame;
     LocalProcessAudioFrame *_audioFrame;
+    NSMutableData *_mData;
     
 }
 @property (nonatomic,strong)NSFileHandle *fileHandle;
@@ -53,6 +54,7 @@
         }
         _fileHandle = nil;
         _isRecording = YES;
+        _mData = [NSMutableData dataWithLength:1920*2];
         [_streamWriter startRecording];
         [self subscribeDelegateCallback];
     }
@@ -61,6 +63,7 @@
 - (void)stopRecording {
     if (_isRecording) {
         _isRecording = NO;
+        _mData = nil;
         [self unsubscribeDelegateCallback];
         [_streamWriter stopRecording];
     }
@@ -102,13 +105,26 @@
 
 #pragma mark TRTCAudioFrameDelegate
 - (void)onCapturedRawAudioFrame:(TRTCAudioFrame *)frame {
-    if (frame.timestamp <= 0) {
-        frame.timestamp = [TRTCCloud generateCustomPTS];
-    }
-    [[LocalAudioManager sharedInstance] addTRTCAudioFrame:frame];
     if (self.isRecording) {
         [self.fileHandle writeData:frame.data];
     }
+    
+    if (!_mData) {
+        return;
+    } else {
+        [_mData appendData:frame.data];
+    }
+   
+    if (_mData.length > 2048) {
+        if (frame.timestamp <= 0) {
+            frame.timestamp = [TRTCCloud generateCustomPTS];
+        }
+        NSData *blockData = [_mData subdataWithRange:NSMakeRange(0, 2048)];
+        frame.data = blockData;
+        [[LocalAudioManager sharedInstance] addTRTCAudioFrame:frame];
+        [_mData replaceBytesInRange:NSMakeRange(0, 2048) withBytes:NULL length:0];
+    }
+    
 //实际
 //48000 * 20/1000 = 960
 //32/16 = 2
