@@ -202,7 +202,7 @@ static int kVideoTimeScale = 1000;
            // 保存编码后的数据。
            NSMutableData *data = [LocalRecordTools changeSampleBufferToData:sampleBuffer];
            if (data) {
-//               [weakSelf.videoFileHandle writeData:data];
+               [weakSelf.videoFileHandle writeData:data];
            } else {
                NSLog(@"data change error");
            }
