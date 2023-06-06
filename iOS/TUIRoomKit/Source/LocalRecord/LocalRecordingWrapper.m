@@ -109,6 +109,13 @@
     if (self.isRecording) {
         [self.fileHandle writeData:frame.data];
     }
+//实际
+//48000 * 20/1000 = 960
+//32/16 = 2
+//2*960 = 1920
+//ios 写入需要
+//1920 bt
+//1024*2 = 2048
 }
 
 - (NSFileHandle *)fileHandle {
