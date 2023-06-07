@@ -214,7 +214,7 @@ static int kVideoTimeScale = 1000;
 - (KFAudioEncoder *)audioEncoder {
     if (!_audioEncoder) {
         __weak typeof(self) weakSelf = self;
-        _audioEncoder = [[KFAudioEncoder alloc] initWithAudioBitrate:[KFAudioConfig defaultConfig].sampleRate];
+        _audioEncoder = [[KFAudioEncoder alloc] initWithAudioBitrate:96000];
         _audioEncoder.errorCallBack = ^(NSError* error) {
             NSLog(@"KFAudioEncoder error:%zi %@", error.code, error.localizedDescription);
         };
