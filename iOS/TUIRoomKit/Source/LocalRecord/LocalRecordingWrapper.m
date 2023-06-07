@@ -113,13 +113,13 @@
     } else {
         [_mData appendData:frame.data];
     }
-   
-    if (_mData.length > 2048) {
+    NSInteger length = 2048*frame.channels;
+    if (_mData.length > length) {
         frame.timestamp = [TRTCCloud generateCustomPTS];
-        NSData *blockData = [_mData subdataWithRange:NSMakeRange(0, 2048)];
+        NSData *blockData = [_mData subdataWithRange:NSMakeRange(0, length)];
         frame.data = blockData;
         [[LocalAudioManager sharedInstance] addTRTCAudioFrame:frame];
-        [_mData replaceBytesInRange:NSMakeRange(0, 2048) withBytes:NULL length:0];
+        [_mData replaceBytesInRange:NSMakeRange(0, length) withBytes:NULL length:0];
     }
     
 //实际
