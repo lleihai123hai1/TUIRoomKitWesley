@@ -98,9 +98,7 @@
 #pragma mark TRTCVideoRenderDelegate
 
 - (void)onRenderVideoFrame:(TRTCVideoFrame *_Nonnull)frame userId:(NSString *__nullable)userId streamType:(TRTCVideoStreamType)streamType {
-    if (frame.timestamp <= 0) {
-        frame.timestamp = [TRTCCloud generateCustomPTS];
-    }
+    frame.timestamp = [TRTCCloud generateCustomPTS];
     [[LocalVideoManager sharedInstance] addTRTCVideoFrame:frame];
 }
 
@@ -117,9 +115,7 @@
     }
    
     if (_mData.length > 2048) {
-        if (frame.timestamp <= 0) {
-            frame.timestamp = [TRTCCloud generateCustomPTS];
-        }
+        frame.timestamp = [TRTCCloud generateCustomPTS];
         NSData *blockData = [_mData subdataWithRange:NSMakeRange(0, 2048)];
         frame.data = blockData;
         [[LocalAudioManager sharedInstance] addTRTCAudioFrame:frame];
