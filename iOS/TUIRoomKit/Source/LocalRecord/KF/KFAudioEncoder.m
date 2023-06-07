@@ -77,6 +77,7 @@
     
     // 3、设置编码器参数：音频编码码率。
     UInt32 outputBitrate = (UInt32) self.audioBitrate;
+    //如果要正确的编码，编码码率参数是必须设置的。否则编码时会返回560226676错误码（!dat）
     result = AudioConverterSetProperty(_audioEncoderInstance, kAudioConverterEncodeBitRate, sizeof(outputBitrate), &outputBitrate);
     if (result != noErr) {
         *error = [NSError errorWithDomain:NSStringFromClass(self.class) code:result userInfo:nil];
