@@ -13,6 +13,7 @@
 #import "LocalProcessVideoFrame.h"
 #import "LocalProcessAudioFrame.h"
 #import "KFAudioConfig.h"
+#import "NSDictionary+Extension.h"
 
 @interface LocalRecordingWrapper()<TRTCVideoRenderDelegate,TRTCAudioFrameDelegate>
 {
@@ -49,6 +50,9 @@
 
 - (void)startRecording {
     if (!_isRecording) {
+        [self enableAudioANS:NO];
+        [self enableAudioAEC:NO];
+        [self enableAudioAGC:NO];
         NSString *filePath = [NSTemporaryDirectory() stringByAppendingPathComponent:@"test.pcm"];
         if ([[NSFileManager defaultManager] fileExistsAtPath:filePath]) {
             [[NSFileManager defaultManager] removeItemAtPath:filePath error:nil];
@@ -95,6 +99,31 @@
     [[LocalAudioManager sharedInstance] unbind];
 }
 
+//噪声消除
+- (void)enableAudioANS:(BOOL)enable {
+    NSDictionary *param =
+            @{@"api" : @"enableAudioANS", @"params" : @{@"enable" : @(enable)}};
+    [self callExperimentalAPI:param];
+}
+//回声消除
+- (void)enableAudioAEC:(BOOL)enable {
+    NSDictionary *param =
+            @{@"api" : @"enableAudioAEC", @"params" : @{@"enable" : @(enable)}};
+    [self callExperimentalAPI:param];
+}
+
+//自动增益
+- (void)enableAudioAGC:(BOOL)enable {
+    NSDictionary *param =
+           @{@"api" : @"enableAudioAGC", @"params" : @{@"enable" : @(enable)}};
+    [self callExperimentalAPI:param];
+}
+
+- (void)callExperimentalAPI:(NSDictionary *)param {
+    NSAssert(param, @"param should not be nil");
+    [[TRTCCloud sharedInstance] callExperimentalAPI:[param jsonStr]];
+}
+
 #pragma mark TRTCVideoRenderDelegate
 
 - (void)onRenderVideoFrame:(TRTCVideoFrame *_Nonnull)frame userId:(NSString *__nullable)userId streamType:(TRTCVideoStreamType)streamType {
@@ -103,7 +132,7 @@
 }
 
 #pragma mark TRTCAudioFrameDelegate
-- (void)onCapturedRawAudioFrame:(TRTCAudioFrame *)frame {
+- (void)onCapturedAudioFrame:(TRTCAudioFrame *)frame {
     if (self.isRecording) {
         [self.fileHandle writeData:frame.data];
     }
