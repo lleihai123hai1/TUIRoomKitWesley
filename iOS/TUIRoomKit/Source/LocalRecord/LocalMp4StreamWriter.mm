@@ -32,7 +32,6 @@ static int kVideoTimeScale = 1000;
 
 
 @interface LocalMp4StreamWriter(){
-    BOOL _isRecording;
     uint64_t _startedSession;
 }
 @property (nonatomic, strong) NSString *outputFilePath;
@@ -53,6 +52,7 @@ static int kVideoTimeScale = 1000;
 @property (nonatomic, strong) AVAssetWriter *writer;
 @property (nonatomic, strong) AVAssetWriterInput *videoWriterInput;
 @property (nonatomic, strong) AVAssetWriterInput *audioWriterInput;
+@property (nonatomic, assign) BOOL isRecording;
 @end
 
 @implementation LocalMp4StreamWriter
@@ -201,7 +201,7 @@ static int kVideoTimeScale = 1000;
        _videoEncoder.sampleBufferOutputCallBack = ^(CMSampleBufferRef sampleBuffer) {
            // 保存编码后的数据。
            NSMutableData *data = [LocalRecordTools changeSampleBufferToData:sampleBuffer];
-           if (data) {
+           if (data && weakSelf.isRecording) {
                [weakSelf.videoFileHandle writeData:data];
            } else {
                NSLog(@"data change error");
@@ -220,7 +220,7 @@ static int kVideoTimeScale = 1000;
         };
         // 音频编码数据回调。在这里将 AAC 数据写入文件。
         _audioEncoder.sampleBufferOutputCallBack = ^(CMSampleBufferRef sampleBuffer) {
-            if (sampleBuffer) {
+            if (sampleBuffer && weakSelf.isRecording) {
                 // 1、获取音频编码参数信息。
                 AudioStreamBasicDescription audioFormat = *CMAudioFormatDescriptionGetStreamBasicDescription(CMSampleBufferGetFormatDescription(sampleBuffer));
                 
