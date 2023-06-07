@@ -12,6 +12,7 @@
 #import "LocalMp4StreamWriter.h"
 #import "LocalProcessVideoFrame.h"
 #import "LocalProcessAudioFrame.h"
+#import "KFAudioConfig.h"
 
 @interface LocalRecordingWrapper()<TRTCVideoRenderDelegate,TRTCAudioFrameDelegate>
 {
@@ -74,8 +75,8 @@
     [[TRTCCloud sharedInstance] setLocalVideoRenderDelegate:self pixelFormat:TRTCVideoPixelFormat_NV12 bufferType:TRTCVideoBufferType_PixelBuffer];
     [[TRTCCloud sharedInstance] setAudioFrameDelegate:self];
     TRTCAudioFrameDelegateFormat *format = [[TRTCAudioFrameDelegateFormat alloc]init];
-    format.channels = 1;
-    format.sampleRate = 48000;
+    format.channels = (int)[KFAudioConfig defaultConfig].channels;
+    format.sampleRate = [KFAudioConfig defaultConfig].sampleRate;
     format.samplesPerCall = (int)(format.sampleRate/100);
     format.mode = TRTCAudioFrameOperationModeReadOnly;
     [[TRTCCloud sharedInstance] setLocalProcessedAudioFrameDelegateFormat:format];

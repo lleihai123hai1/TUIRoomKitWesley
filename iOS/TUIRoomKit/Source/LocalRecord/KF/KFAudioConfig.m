@@ -10,7 +10,7 @@
 @implementation KFAudioConfig
 + (instancetype)defaultConfig {
     KFAudioConfig *config = [[self alloc] init];
-    config.channels = 1;
+    config.channels = 2;
     config.sampleRate = 48000;
     config.bitDepth = 16;
     return config;
