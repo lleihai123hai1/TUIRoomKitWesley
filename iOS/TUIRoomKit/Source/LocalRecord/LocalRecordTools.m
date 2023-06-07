@@ -30,10 +30,10 @@ static size_t kAACSamplesPerChannelPerFrame = 1024;
     audioFormat.mFormatFlags = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
     //一个包里面有多少个帧（pcm 一个包一个帧，aac 一个包1024个帧）
     audioFormat.mFramesPerPacket = 1;
-    //一帧有多少个字节，一帧是各个声道的采样点的集合， mBytesPerFrame = mChannelsPerFrame * mBitsPerChannel
-    audioFormat.mBytesPerFrame = 2;
-    //一个包里面有多少字节 mBytesPerPacket = mBytesPerFrame * mFramesPerPacket
-    audioFormat.mBytesPerPacket = 2;
+    //一帧有多少个字节，一帧是各个声道的采样点的集合
+    audioFormat.mBytesPerFrame = (audioFormat.mBitsPerChannel / 8) * audioFormat.mChannelsPerFrame;
+    //一个包里面有多少字节
+    audioFormat.mBytesPerPacket = audioFormat.mBytesPerFrame;
     audioFormat.mReserved = 0;
 
     CMFormatDescriptionRef formatDesc = NULL;
