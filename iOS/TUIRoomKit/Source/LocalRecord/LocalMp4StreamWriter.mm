@@ -18,6 +18,8 @@
 #import "KFAudioConfig.h"
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
+//使用 AVAssetWriter 创作片段 MPEG-4 内容 参考：https://toutiao.io/posts/7r58mpe/preview
+
 static int kVideoTimeScale = 1000;
 //参考链接：https://zhuanlan.zhihu.com/p/515281023
 //用工具播放 H.264/H.265 文件
@@ -56,6 +58,9 @@ static int kVideoTimeScale = 1000;
 @property (nonatomic, strong) AVAssetWriterInput *videoWriterInput;
 @property (nonatomic, strong) AVAssetWriterInput *audioWriterInput;
 @property (nonatomic, assign) BOOL isRecording;
+
+@property (nonatomic, strong) NSData *initialSegmentData;
+@property (nonatomic, assign) NSInteger currentIndex;
 @end
 
 @implementation LocalMp4StreamWriter
@@ -83,9 +88,15 @@ static int kVideoTimeScale = 1000;
     if ([[NSFileManager defaultManager] fileExistsAtPath:self.outputFilePath]) {
         [[NSFileManager defaultManager] removeItemAtPath:self.outputFilePath error:nil];
     }
+    
+    NSString *path = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).firstObject;
+    path = [path stringByAppendingPathComponent:@"LocalRecordSegment"];
+    [[NSFileManager defaultManager] removeItemAtPath:path error:nil];
+    
     [[NSFileManager defaultManager] createFileAtPath:self.audioFilePath contents:nil attributes:nil];
     [[NSFileManager defaultManager] createFileAtPath:self.audioPcmFilePath contents:nil attributes:nil];
     [[NSFileManager defaultManager] createFileAtPath:self.videoFilePath contents:nil attributes:nil];
+    _currentIndex = 0;
 }
 
 - (void)startRecording {
@@ -122,6 +133,7 @@ static int kVideoTimeScale = 1000;
     _audioWriterInput = nil;
     _writer = nil;
     _startedSession = NO;
+    _initialSegmentData = nil;
 }
 
 
@@ -144,22 +156,12 @@ static int kVideoTimeScale = 1000;
 }
 #pragma mark get/set
 
-- (void)assetWriter:(AVAssetWriter *)writer didOutputSegmentData:(NSData *)segmentData segmentType:(AVAssetSegmentType)segmentType segmentReport:(nullable AVAssetSegmentReport *)segmentReport  API_AVAILABLE(ios(14.0)){
-    NSLog(@"ddddddd 1");
-}
-
-- (void)assetWriter:(AVAssetWriter *)writer didOutputSegmentData:(NSData *)segmentData segmentType:(AVAssetSegmentType)segmentType  API_AVAILABLE(ios(14.0)){
-    NSLog(@"ddddddd 2");
-}
-
 - (AVAssetWriter *)writer {
     if (!_writer) {
-        NSError *error = nil;
-        NSURL *fileUrl = [NSURL fileURLWithPath:self.outputFilePath];
-        // 根据文件名扩展类型，确定具体容器格式
-        AVFileType mediaFileType = AVFileTypeMPEG4;
         if (@available(iOS 14.0, *)) {
-            
+            // 根据文件名扩展类型，确定具体容器格式
+            AVFileType mediaFileType = AVFileTypeMPEG4;
+            //使用 AVAssetWriter 创作片段 MPEG-4 内容
             _writer = [[AVAssetWriter alloc] initWithContentType:UTTypeMPEG4Movie];
             _writer.outputFileTypeProfile = AVFileTypeProfileMPEG4AppleHLS;
             _writer.preferredOutputSegmentInterval = CMTimeMake(6.0, 600);
@@ -398,6 +400,43 @@ static int kVideoTimeScale = 1000;
         CFRelease(videoSample);
     }
 }
+
+
+#pragma mark AVAssetWriterDelegate
+- (void)assetWriter:(AVAssetWriter *)writer didOutputSegmentData:(NSData *)segmentData segmentType:(AVAssetSegmentType)segmentType segmentReport:(nullable AVAssetSegmentReport *)segmentReport  API_AVAILABLE(ios(14.0)){
+    if (segmentType == AVAssetSegmentTypeInitialization) {
+        self.initialSegmentData = segmentData?[[NSData alloc] initWithData:segmentData]:nil;
+    } else {
+        self.currentIndex += 1;
+        NSMutableData *muData = [[NSMutableData alloc] init];
+        if (self.initialSegmentData) {
+            [muData  appendData:self.initialSegmentData];
+        }
+        [muData appendData:segmentData];
+        
+        NSString *path = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).firstObject;
+        NSFileManager *manager = [NSFileManager defaultManager];
+        path = [path stringByAppendingPathComponent:@"LocalRecordSegment"];
+        BOOL isDirectory = YES;
+        if (![manager fileExistsAtPath:path isDirectory:&isDirectory]) {
+            NSError *error = nil;
+            [manager createDirectoryAtPath:path withIntermediateDirectories:YES attributes:nil error:&error];
+            if (error) {
+                NSLog(@"outputFilePath create error: %@", error.localizedDescription);
+            }
+        }
+        NSString *fileName = [NSString stringWithFormat:@"/SegmentRecordVideo_%ld.m4s",(long)self.currentIndex];
+        NSString *filePath = [path stringByAppendingString:fileName];
+        if ([manager fileExistsAtPath:filePath]) {
+            [manager removeItemAtPath:filePath error:nil];
+        }
+        if ([muData writeToFile:filePath atomically:YES]) {
+            NSLog(@"writeToFile %@ success",fileName);
+        }
+        self.initialSegmentData = nil;
+    }
+}
+
 
 #pragma mark _videoWriterInput
 
