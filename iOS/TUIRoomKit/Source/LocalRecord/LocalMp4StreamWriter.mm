@@ -35,6 +35,8 @@ static int kVideoTimeScale = 1000;
 // 从mp4文件中导出音频
 //ffmpeg -i tmp.mp4 -vn -c:a copy out.m4a
 
+// ffmpeg批量处理m4s合并成mp4
+//ffmpeg -i "concat:SegmentRecordVideo_1.m4s|SegmentRecordVideo_2.m4s|SegmentRecordVideo_3.m4s" -c copy output.mp4
 
 @interface LocalMp4StreamWriter()<AVAssetWriterDelegate>{
     uint64_t _startedSession;
@@ -165,7 +167,7 @@ static int kVideoTimeScale = 1000;
             _writer = [[AVAssetWriter alloc] initWithContentType:UTTypeMPEG4Movie];
             _writer.outputFileTypeProfile = AVFileTypeProfileMPEG4AppleHLS;
             _writer.preferredOutputSegmentInterval = CMTimeMake(6.0, 1);//每秒的帧数 value/timescale=6 也就是6秒一帧
-            _writer.initialSegmentStartTime = CMTimeMake([TRTCCloud generateCustomPTS],1000);
+            _writer.initialSegmentStartTime = CMTimeMake([TRTCCloud generateCustomPTS],kVideoTimeScale);
         } else {
             // Fallback on earlier versions
         }
