@@ -164,7 +164,7 @@ static int kVideoTimeScale = 1000;
             //使用 AVAssetWriter 创作片段 MPEG-4 内容
             _writer = [[AVAssetWriter alloc] initWithContentType:UTTypeMPEG4Movie];
             _writer.outputFileTypeProfile = AVFileTypeProfileMPEG4AppleHLS;
-            _writer.preferredOutputSegmentInterval = CMTimeMake(6.0, 600);
+            _writer.preferredOutputSegmentInterval = CMTimeMake(6.0, 1);//每秒的帧数 value/timescale=6 也就是6秒一帧
             _writer.initialSegmentStartTime = CMTimeMake([TRTCCloud generateCustomPTS],1000);
         } else {
             // Fallback on earlier versions
