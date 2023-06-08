@@ -75,6 +75,9 @@ class RoomMainViewModel: NSObject {
                 debugPrint("openLocalCamera:code:\(code),message:\(message)")
             }
             roomEngine.startPushLocalVideo()
+            
+            let setUpViewModel = SetUpViewModel()
+            setUpViewModel.updateVideoEncoderParam()
         }
         if roomInfo.isOpenMicrophone && !roomInfo.isMicrophoneDisableForAllUser {
             roomEngine.openLocalMicrophone(engineManager.store.audioSetting.audioQuality) { [weak self] in
