@@ -409,7 +409,7 @@ static int kVideoTimeScale = 1000;
 #pragma mark AVAssetWriterDelegate
 - (void)assetWriter:(AVAssetWriter *)writer didOutputSegmentData:(NSData *)segmentData segmentType:(AVAssetSegmentType)segmentType segmentReport:(nullable AVAssetSegmentReport *)segmentReport  API_AVAILABLE(ios(14.0)){
     if (segmentType == AVAssetSegmentTypeInitialization) {
-        self.initialSegmentData = segmentData?[[NSData alloc] initWithData:segmentData]:nil;
+        self.initialSegmentData = segmentData;
     } else {
         self.currentIndex += 1;
         NSMutableData *muData = [[NSMutableData alloc] init];
@@ -437,7 +437,6 @@ static int kVideoTimeScale = 1000;
         if ([muData writeToFile:filePath atomically:YES]) {
             NSLog(@"writeToFile %@ success",fileName);
         }
-        self.initialSegmentData = nil;
     }
 }
 
