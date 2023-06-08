@@ -38,6 +38,13 @@ static int kVideoTimeScale = 1000;
 // ffmpeg批量处理m4s合并成mp4
 //ffmpeg -i "concat:SegmentRecordVideo_1.m4s|SegmentRecordVideo_2.m4s|SegmentRecordVideo_3.m4s" -c copy output.mp4
 
+//ffmpeg切片segment
+//ffmpeg -i output.mp4 -hls_segment_filename 'file%03d.m4s' out.m3u8
+//ffplay -i out.m3u8
+
+//仅生成音频mp3
+//ffmpeg -i audio.m4s -f mp3 audio.mp3
+
 @interface LocalMp4StreamWriter()<AVAssetWriterDelegate>{
     uint64_t _startedSession;
 }
