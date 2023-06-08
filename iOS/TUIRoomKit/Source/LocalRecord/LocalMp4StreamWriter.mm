@@ -16,6 +16,7 @@
 #import "KFVideoPacketExtraData.h"
 #import "LocalRecordTools.h"
 #import "KFAudioConfig.h"
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
 static int kVideoTimeScale = 1000;
 //参考链接：https://zhuanlan.zhihu.com/p/515281023
@@ -33,7 +34,7 @@ static int kVideoTimeScale = 1000;
 //ffmpeg -i tmp.mp4 -vn -c:a copy out.m4a
 
 
-@interface LocalMp4StreamWriter(){
+@interface LocalMp4StreamWriter()<AVAssetWriterDelegate>{
     uint64_t _startedSession;
 }
 @property (nonatomic, strong) NSString *outputFilePath;
@@ -143,14 +144,35 @@ static int kVideoTimeScale = 1000;
 }
 #pragma mark get/set
 
+- (void)assetWriter:(AVAssetWriter *)writer didOutputSegmentData:(NSData *)segmentData segmentType:(AVAssetSegmentType)segmentType segmentReport:(nullable AVAssetSegmentReport *)segmentReport  API_AVAILABLE(ios(14.0)){
+    NSLog(@"ddddddd 1");
+}
+
+- (void)assetWriter:(AVAssetWriter *)writer didOutputSegmentData:(NSData *)segmentData segmentType:(AVAssetSegmentType)segmentType  API_AVAILABLE(ios(14.0)){
+    NSLog(@"ddddddd 2");
+}
+
 - (AVAssetWriter *)writer {
     if (!_writer) {
         NSError *error = nil;
         NSURL *fileUrl = [NSURL fileURLWithPath:self.outputFilePath];
         // 根据文件名扩展类型，确定具体容器格式
         AVFileType mediaFileType = AVFileTypeMPEG4;
-        _writer = [[AVAssetWriter alloc] initWithURL:fileUrl fileType:mediaFileType error:&error];
+        if (@available(iOS 14.0, *)) {
+            
+            _writer = [[AVAssetWriter alloc] initWithContentType:UTTypeMPEG4Movie];
+            _writer.outputFileTypeProfile = AVFileTypeProfileMPEG4AppleHLS;
+            _writer.preferredOutputSegmentInterval = CMTimeMake(6.0, 600);
+            _writer.initialSegmentStartTime = CMTimeMake([TRTCCloud generateCustomPTS],1000);
+        } else {
+            // Fallback on earlier versions
+        }
         _writer.shouldOptimizeForNetworkUse = YES;
+        if (@available(iOS 14.0, *)) {
+            _writer.delegate = self;
+        } else {
+            // Fallback on earlier versions
+        }
     }
     return _writer;
 }
