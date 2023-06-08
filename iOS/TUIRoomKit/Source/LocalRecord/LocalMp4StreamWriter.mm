@@ -168,8 +168,6 @@ static int kVideoTimeScale = 1000;
 - (AVAssetWriter *)writer {
     if (!_writer) {
         if (@available(iOS 14.0, *)) {
-            // 根据文件名扩展类型，确定具体容器格式
-            AVFileType mediaFileType = AVFileTypeMPEG4;
             //使用 AVAssetWriter 创作片段 MPEG-4 内容
             _writer = [[AVAssetWriter alloc] initWithContentType:UTTypeMPEG4Movie];
             _writer.outputFileTypeProfile = AVFileTypeProfileMPEG4AppleHLS;
