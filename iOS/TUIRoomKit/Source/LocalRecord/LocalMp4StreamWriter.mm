@@ -29,6 +29,8 @@ static int kVideoTimeScale = 1000;
 
 //ffmpeg -i video_tmp.h265 -i audio_tmp.acc -vcodec copy -f mp4 test.mp4
 
+// 从mp4文件中导出音频
+//ffmpeg -i tmp.mp4 -vn -c:a copy out.m4a
 
 
 @interface LocalMp4StreamWriter(){
