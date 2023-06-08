@@ -182,7 +182,7 @@ static int kVideoTimeScale = 1000;
 - (AVAssetWriterInput *)videoWriterInput {
     if (!_videoWriterInput) {
         CGSize size =  CGSizeMake(1080,1920);
-        NSInteger bitsPerSecond = 10*size.width * size.height;
+        NSInteger bitsPerSecond = 6000*1000;//10*size.width * size.height;
         NSDictionary * writerOutputSettings =@{
             AVVideoCodecKey : AVVideoCodecTypeH264,
             AVVideoWidthKey : @(size.width),
@@ -206,7 +206,9 @@ static int kVideoTimeScale = 1000;
     if (!_audioWriterInput) {
         NSDictionary *audioSetting = @{AVFormatIDKey : @(kAudioFormatMPEG4AAC),
                                        AVNumberOfChannelsKey : @([KFAudioConfig defaultConfig].channels),
-                                       AVSampleRateKey : @([KFAudioConfig defaultConfig].sampleRate) };
+                                       AVSampleRateKey : @([KFAudioConfig defaultConfig].sampleRate),
+                                       AVEncoderBitRateKey:@(192000),
+        };
         _audioWriterInput =  [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeAudio outputSettings:audioSetting];
     }
     return _audioWriterInput;
