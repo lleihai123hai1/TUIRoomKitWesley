@@ -47,6 +47,7 @@ static int kVideoTimeScale = 1000;
 
 @interface LocalMp4StreamWriter()<AVAssetWriterDelegate>{
     uint64_t _startedSession;
+    uint64_t _beginTimestamp;
 }
 @property (nonatomic, strong) NSString *outputFilePath;
 
@@ -172,7 +173,7 @@ static int kVideoTimeScale = 1000;
             _writer = [[AVAssetWriter alloc] initWithContentType:UTTypeMPEG4Movie];
             _writer.outputFileTypeProfile = AVFileTypeProfileMPEG4AppleHLS;
             _writer.preferredOutputSegmentInterval = CMTimeMake(6.0, 1);//每秒的帧数 value/timescale=6 也就是6秒一帧
-            _writer.initialSegmentStartTime = CMTimeMake([TRTCCloud generateCustomPTS],kVideoTimeScale);
+            _writer.initialSegmentStartTime = kCMTimeZero;//CMTimeMake([TRTCCloud generateCustomPTS],kVideoTimeScale);
         } else {
             // Fallback on earlier versions
         }
@@ -386,9 +387,11 @@ static int kVideoTimeScale = 1000;
 - (void)onCallbackLocalAudioFrame:(LocalAudioFrame*)localAudioFrame {
     if (_isRecording) {
         if (!_startedSession) {
-            _startedSession = YES;;
-            [self.writer startSessionAtSourceTime:CMTimeMake(localAudioFrame.audioFrame.timestamp, kVideoTimeScale)];
+            _startedSession = YES;
+            _beginTimestamp = localAudioFrame.audioFrame.timestamp;
+            [self.writer startSessionAtSourceTime:CMTimeMake(localAudioFrame.audioFrame.timestamp-_beginTimestamp, kVideoTimeScale)];
         }
+        localAudioFrame.audioFrame.timestamp -= _beginTimestamp;
         CMSampleBufferRef audioSample = [LocalRecordTools sampleBufferFromAudioData:localAudioFrame];
         [self.audioEncoder encodeSampleBuffer:audioSample];
         [self appendAudioSampleBuffer:audioSample];
@@ -402,8 +405,10 @@ static int kVideoTimeScale = 1000;
         [self.videoEncoder encodePixelBuffer:localVideoFrame.videoFrame.pixelBuffer ptsTime:kCMTimePositiveInfinity];
         if (!_startedSession) {
             _startedSession = YES;;
-            [self.writer startSessionAtSourceTime:CMTimeMake(localVideoFrame.videoFrame.timestamp, kVideoTimeScale)];
+            _beginTimestamp = localVideoFrame.videoFrame.timestamp;
+            [self.writer startSessionAtSourceTime:CMTimeMake(localVideoFrame.videoFrame.timestamp-_beginTimestamp, kVideoTimeScale)];
         }
+        localVideoFrame.videoFrame.timestamp -= _beginTimestamp;
         CMSampleBufferRef videoSample = [LocalRecordTools createSampleBufferFromPixelBuffer:localVideoFrame.videoFrame.pixelBuffer time:CMTimeMake(localVideoFrame.videoFrame.timestamp, kVideoTimeScale)];
         [self appendVideoSampleBuffer:videoSample];
         CFRelease(videoSample);
