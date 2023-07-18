@@ -24,7 +24,7 @@ Pod::Spec.new do |spec|
   
   spec.subspec 'Professional' do |professional|
     professional.dependency 'TUIRoomEngine/Professional', '1.4.1'
-    professional.source_files = 'Source/*.swift', 'Source/Presenter/*.swift', 'Source/**/*.swift', 'Source/**/*.h', 'Source/**/*.m', 'RoomExtension/**/*.swift', 'RoomExtension/**/*.h', 'RoomExtension/**/*.m'
+    professional.source_files = 'Source/*.swift', 'Source/Presenter/*.swift', 'Source/**/*.swift', 'Source/**/*.h', 'Source/**/*.m', 'Source/**/*.mm'
     professional.resource_bundles = {
       'TUIRoomKitBundle' => ['Resources/*.xcassets', 'Resources/Localized/**/*.strings']
     }
@@ -33,7 +33,7 @@ Pod::Spec.new do |spec|
   
   spec.subspec 'TRTC' do |trtc|
     trtc.dependency 'TUIRoomEngine/TRTC', '1.4.1'
-    trtc.source_files = 'Source/*.swift', 'Source/Presenter/*.swift', 'Source/**/*.swift', 'Source/**/*.h', 'Source/**/*.m', 'RoomExtension/**/*.swift', 'RoomExtension/**/*.h', 'RoomExtension/**/*.m'
+    trtc.source_files = 'Source/*.swift', 'Source/Presenter/*.swift', 'Source/**/*.swift', 'Source/**/*.h', 'Source/**/*.m', 'Source/**/*.mm'
     trtc.resource_bundles = {
       'TUIRoomKitBundle' => ['Resources/*.xcassets', 'Resources/Localized/**/*.strings']
     }
