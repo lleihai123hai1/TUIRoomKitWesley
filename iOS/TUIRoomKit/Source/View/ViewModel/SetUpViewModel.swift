@@ -182,15 +182,15 @@ class SetUpViewModel {
         }
         videoItems.append(bitrateItem)
         
-        let localMirrorItem = ListCellItemData()
-        localMirrorItem.titleText = .localMirrorText
-        localMirrorItem.hasSwitch = true
-        localMirrorItem.isSwitchOn = engineManager.store.videoSetting.isMirror
-        localMirrorItem.action = { [weak self] sender in
-            guard let self = self, let view = sender as? UISwitch else { return }
-            self.localMirrorAction(sender: view)
-        }
-        videoItems.append(localMirrorItem)
+//        let localMirrorItem = ListCellItemData()
+//        localMirrorItem.titleText = .localMirrorText
+//        localMirrorItem.hasSwitch = true
+//        localMirrorItem.isSwitchOn = engineManager.store.videoSetting.isMirror
+//        localMirrorItem.action = { [weak self] sender in
+//            guard let self = self, let view = sender as? UISwitch else { return }
+//            self.localMirrorAction(sender: view)
+//        }
+//        videoItems.append(localMirrorItem)
         
         
         let localRecordingItem = ListCellItemData()
@@ -206,6 +206,47 @@ class SetUpViewModel {
             }
         }
         videoItems.append(localRecordingItem)
+        
+        
+        let volumeItem = ListCellItemData()
+        volumeItem.titleText = .volumeText
+        volumeItem.hasSwitch = true
+        volumeItem.isSwitchOn = volumeItem.hasSwitch
+        volumeItem.action = { sender in
+            guard let view = sender as? UISwitch else { return }
+            if view.isOn {
+                self.engineManager.store.audioSetting.captureVolume = 100
+            } else {
+                self.engineManager.store.audioSetting.captureVolume = 0
+            }
+            self.engineManager.roomEngine.getTRTCCloud().setAudioCaptureVolume(self.engineManager.store.audioSetting.captureVolume)
+        }
+        videoItems.append(volumeItem)
+        
+        
+        let bgMusicItem = ListCellItemData()
+        bgMusicItem.titleText = .bgMusicText
+        bgMusicItem.hasSwitch = true
+        bgMusicItem.isSwitchOn = false
+        bgMusicItem.action = { sender in
+            guard let view = sender as? UISwitch else { return }
+            if view.isOn {
+                self.engineManager.roomEngine.getTRTCCloud().stopBGM()
+                let path = Bundle.main.path(forResource: "bgm_demo", ofType: ".mp3")
+                self.engineManager.roomEngine.getTRTCCloud().playBGM(path!) { _ in
+                    
+                } withProgressNotify: { _, _ in
+                    
+                } andCompleteNotify: { _ in
+                    
+                }
+                self.engineManager.roomEngine.getTRTCCloud().setBGMPlayoutVolume(0)
+                
+            } else {
+                self.engineManager.roomEngine.getTRTCCloud().stopBGM()
+            }
+        }
+        videoItems.append(bgMusicItem)
         
     }
     
@@ -388,5 +429,13 @@ private extension String {
     
     static var localRecordingText: String {
         localized("TUIRoom.local.recording")
+    }
+    
+    static var volumeText: String {
+        localized("TUIRoom.local.volume")
+    }
+    
+    static var bgMusicText: String {
+        localized("TUIRoom.local.bg_music")
     }
 }

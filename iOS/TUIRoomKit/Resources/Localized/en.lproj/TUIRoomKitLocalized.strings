@@ -157,3 +157,5 @@
 "TUIRoom.mic.set" = "Join the conference and turn on the microphone";
 "TUIRoom.camera.set" = "Join the conference and turn on the camera";
 "TUIRoom.local.recording" = "Local Recording";
+"TUIRoom.local.volume" = "Volume";
+"TUIRoom.local.bg_music" = "Bg Music";

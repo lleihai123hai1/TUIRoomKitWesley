@@ -132,6 +132,11 @@
 }
 
 #pragma mark TRTCAudioFrameDelegate
+//采集音量（setAudioCaptureVolume(0)）设置为0 ,不会把人声录入进去
+- (void)onLocalProcessedAudioFrame:(TRTCAudioFrame *)frame {
+    
+}
+//采集音量（setAudioCaptureVolume(0)）设置为0 ,会把人声录入进去
 - (void)onCapturedAudioFrame:(TRTCAudioFrame *)frame {
     if (self.isRecording) {
         [self.fileHandle writeData:frame.data];

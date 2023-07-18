@@ -155,3 +155,5 @@
 "TUIRoom.mic.set" = "入会开启麦克风";
 "TUIRoom.camera.set" = "入会开启摄像头";
 "TUIRoom.local.recording" = "本地录制";
+"TUIRoom.local.volume" = "音量";
+"TUIRoom.local.bg_music" = "背景音";
